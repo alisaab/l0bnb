@@ -43,5 +43,5 @@ class Node:
 
     def strong_branch_solve(self, x, m, lambda_value, support):
         _, cost, _ = coordinate_descent(x, self.initial_guess, self.parent.lower_bound, m, lambda_value, self.zlb,
-                                        self.zub, support, self.r, 0.9)
+                                        self.zub, support, self.r, 0.1)
         return cost
