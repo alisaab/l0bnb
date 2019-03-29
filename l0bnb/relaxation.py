@@ -19,7 +19,7 @@ def coordinate_descent_loop(x, beta, index_map, m, lambda_value, zlb, zub, suppo
         x_i = x[:, i]
         r = r + dot_product(beta[i], x_i)
         ri_xi = dot_product(r, x_i)
-        criteria = abs(ri_xi) - lambda_value
+        criteria = (abs(ri_xi) - lambda_value)/np.dot(x_i, x_i)
         if criteria > 0:
             if index_map[i] not in support:
                 set_add(index_map[i])
@@ -33,7 +33,7 @@ def coordinate_descent_loop(x, beta, index_map, m, lambda_value, zlb, zub, suppo
         x_i = x[:, i]
         r = r + dot_product(beta[i], x_i)
         ri_xi = dot_product(r, x_i)
-        criteria = abs(ri_xi)
+        criteria = abs(ri_xi)/np.dot(x_i, x_i)
         if index_map[i] not in support:
             set_add(index_map[i])
         beta[i] = (criteria if criteria < m else m) * np.sign(ri_xi)
