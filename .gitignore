@@ -102,3 +102,12 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# xml
+*.xml
+
+# iml
+*.iml
+
+# eps
+*.eps
