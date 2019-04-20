@@ -27,14 +27,14 @@ def new_z(node, index):
     return new_zlb, new_zub
 
 
-def strong_branching(current_node, x, m, lambda_value, mu):
+def strong_branching(current_node, x, l0, l2, m, mu):
     max_s_index = -1
     max_s = - sys.maxsize
     support = list(current_node.lower_bound_solution.nonzero()[0])
     for i in support:
         new_zlb, new_zub = new_z(current_node, i)
-        left_cost = Node(1, current_node, new_zlb, current_node.zub).strong_branch_solve(x, m, lambda_value, set(support))
-        right_cost = Node(2, current_node, current_node.zlb, new_zub).strong_branch_solve(x, m, lambda_value, set(support))
+        left_cost = Node(1, current_node, new_zlb, current_node.zub).strong_branch_solve(x, l0, l2, m, set(support))
+        right_cost = Node(2, current_node, current_node.zlb, new_zub).strong_branch_solve(x, l0, l2, m, set(support))
         s = mu * min(left_cost, right_cost) + (1 - mu) * max(left_cost, right_cost)
         if s > max_s:
             max_s = s
@@ -42,9 +42,9 @@ def strong_branching(current_node, x, m, lambda_value, mu):
     return max_s_index
 
 
-def branch(node_queue, current_node, x, m, lambda_value, tol, branching_type, mu):
+def branch(node_queue, current_node, x, l0, l2, m, tol, branching_type, mu):
     if branching_type == 'strong':
-        branching_variable = strong_branching(current_node, x, m, lambda_value, mu)
+        branching_variable = strong_branching(current_node, x, l0, l2, m, mu)
     elif branching_type == 'maxfrac':
         branching_variable = max_fraction_branching(current_node.lower_bound_z, tol)
     else:

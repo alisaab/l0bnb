@@ -6,7 +6,7 @@ from .node import Node
 from .utilities import branch, is_integral
 
 
-def bnb(x, y, lambda_value, m, inttol=1e-4, gaptol=1e-2, reltol=1e-4, upperbound=sys.maxsize, uppersol=None,
+def bnb(x, y, l0, l2, m, inttol=1e-4, gaptol=1e-2, reltol=1e-4, upperbound=sys.maxsize, uppersol=None,
         branching='maxfrac', l1solver='l1cd', mu=0.9):
     # The number of features
     p = x.shape[1]
@@ -39,7 +39,7 @@ def bnb(x, y, lambda_value, m, inttol=1e-4, gaptol=1e-2, reltol=1e-4, upperbound
                 return uppersol, upperbound, edges, lower_bound
 
         # calculate lower bound and update
-        current_lower_bound = current_node.compute_lower_bound(x, y, m, lambda_value, reltol, l1solver,
+        current_lower_bound = current_node.compute_lower_bound(x, y, l0, l2, m, reltol, l1solver,
                                                                current_node.initial_guess)
         lower_bound[current_node.level] = min(current_lower_bound, lower_bound.get(current_node.level, sys.maxsize))
         # integral solution?
@@ -51,11 +51,11 @@ def bnb(x, y, lambda_value, m, inttol=1e-4, gaptol=1e-2, reltol=1e-4, upperbound
                 uppersol = current_node.lower_bound_solution
         # branch?
         elif current_lower_bound < upperbound:
-            current_upper_bound = current_node.compute_upper_bound(x, y, m, lambda_value, inttol)
+            current_upper_bound = current_node.compute_upper_bound(x, y, l0, l2, m, inttol)
             if current_upper_bound < upperbound:
                 upperbound = current_upper_bound
                 uppersol = current_node.upper_bound_solution
-            branch(node_queue, current_node, x, m, lambda_value, inttol, branching, mu)
+            branch(node_queue, current_node, x, l0, l2, m, inttol, branching, mu)
             edges += [(current_node.node_num, current_node.node_num * 2 + 1),
                       (current_node.node_num, current_node.node_num * 2 + 2)]
         # prune?
