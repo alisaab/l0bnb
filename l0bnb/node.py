@@ -35,7 +35,7 @@ class Node:
     def compute_upper_bound(self, x, y, l0, l2, m, int_tol):
         support = list(np.where(abs(self.lower_bound_solution) > int_tol)[0])
         x_support = x[:, support]
-        x_ridge = - np.sqrt(2 * l2) * np.identity(len(support))
+        x_ridge = np.sqrt(2 * l2) * np.identity(len(support))
         x_upper = np.concatenate((x_support, x_ridge), axis=0)
         y_upper = np.concatenate((y, np.zeros(len(support))), axis=0)
         res = sci_opt.lsq_linear(x_upper, y_upper, (-m, m))  # account for intercept later
