@@ -105,6 +105,7 @@ def coordinate_descent(x, beta, cost, l0, l2, m, zlb, zub, support, r, reltol):
         else:
             s = np.zeros(len(beta))
             z = abs(beta) / m
+        z = np.minimum(np.maximum(zlb, z), zub)
         cost = np.dot(r, r) / 2 + l0 * sum(z) + l2 * sum(s)
         tol = abs(1 - old_cost / cost)
     return beta, cost, r
@@ -140,6 +141,7 @@ def relaxation_solve(x, y, l0, l2, m, zlb, zub, beta, r, reltol=1e-12):
     else:
         s = np.zeros(p)
         z = abs(beta) / m
+    z = np.minimum(np.maximum(zlb, z), zub)
     cost = np.dot(r, r) / 2 + l0 * sum(z) + l2 * sum(s)
     while True:
         beta, cost, r = coordinate_descent(x, beta, cost, l0, l2, m, zlb, zub, support, r, reltol)
@@ -162,5 +164,6 @@ def relaxation_solve(x, y, l0, l2, m, zlb, zub, beta, r, reltol=1e-12):
         s = np.zeros(p)
         z = abs(beta) / m
     # print(s)
-    print(z)
-    return beta, r, z, cost
+    # print(np.minimum(np.maximum(zlb, z), zub))
+    # print(beta)
+    return beta, r, np.minimum(np.maximum(zlb, z), zub), cost
