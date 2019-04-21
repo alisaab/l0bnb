@@ -14,22 +14,7 @@ def coordinate_descent_loop(x, beta, index_map, l0, l2, m, zlb, zub, support, r)
         set_discard(index_map[i])
         beta[i] = 0
 
-    if l2 == 0 or l0/l2 > 4*m**2:
-        for i in zlb_active_is_zero:
-            x_i = x[:, i]
-            r = r + dot_product(beta[i], x_i)
-            ri_xi = dot_product(r, x_i)
-            ri_xi_abs = abs(ri_xi)
-            if ri_xi_abs <= l0/m:
-                set_discard(index_map[i])
-                beta[i] = 0
-            else:
-                criteria = (abs(ri_xi) - l0 / m) / (np.dot(x_i, x_i) + 2 * l2)
-                if index_map[i] not in support:
-                    set_add(index_map[i])
-                beta[i] = (criteria if criteria < m else m) * np.sign(ri_xi)
-                r = r - dot_product(beta[i], x_i)
-    elif l0/l2 <= m**2:
+    if l0/l2 <= m**2:
         for i in zlb_active_is_zero:
             x_i = x[:, i]
             r = r + dot_product(beta[i], x_i)
@@ -48,28 +33,21 @@ def coordinate_descent_loop(x, beta, index_map, l0, l2, m, zlb, zub, support, r)
                 else:
                     beta[i] = m
                 r = r - dot_product(beta[i], x_i)
-    elif m**2 < l0/l2 <= 4*m**2:
+    else:
         for i in zlb_active_is_zero:
-            x_i = x[:, i]
-            r = r + dot_product(beta[i], x_i)
-            ri_xi = dot_product(r, x_i)
-            ri_xi_abs = abs(ri_xi)
-            if ri_xi_abs <= 2*np.sqrt(l0*l2):
-                set_discard(index_map[i])
-                beta[i] = 0
-            else:
-                if index_map[i] not in support:
-                    set_add(index_map[i])
-                A = 2*np.sqrt(l0/l2) - l0/(l2*m)
-                if ri_xi_abs < A * np.dot(x_i, x_i) + 2 * np.sqrt(l0*l2):
-                    beta[i] = (ri_xi_abs - 2*np.sqrt(l0*l2))*np.sign(ri_xi)/np.dot(x_i, x_i)
-                elif ri_xi_abs <= A * np.dot(x_i, x_i) + 4*np.sqrt(l0*l2) - l0/m:
-                    beta[i] = A
-                elif ri_xi_abs < m * np.dot(x_i, x_i) + 2*m*l2 + l0/m:
-                    beta[i] = (ri_xi_abs - l0/m)*np.sign(ri_xi)/(np.dot(x_i, x_i)+2*l2)
+                x_i = x[:, i]
+                r = r + dot_product(beta[i], x_i)
+                ri_xi = dot_product(r, x_i)
+                ri_xi_abs = abs(ri_xi)
+                if ri_xi_abs <= l0/m + l2*m:
+                    set_discard(index_map[i])
+                    beta[i] = 0
                 else:
-                    beta[i] = m
-                r = r - dot_product(beta[i], x_i)
+                    criteria = (abs(ri_xi) - l0 / m - l2 * m) / np.dot(x_i, x_i)
+                    if index_map[i] not in support:
+                        set_add(index_map[i])
+                    beta[i] = (criteria if criteria < m else m) * np.sign(ri_xi)
+                    r = r - dot_product(beta[i], x_i)
 
     for i in zlb_active_is_one:
         x_i = x[:, i]
@@ -100,6 +78,7 @@ def coordinate_descent(x, beta, cost, l0, l2, m, zlb, zub, support, r, reltol):
             s = beta ** 2 * np.logical_and(abs(beta) > np.sqrt(l0 / l2), np.sqrt(l0 / l2) <= m) + \
                 abs(beta) * np.sqrt(l0 / l2) * np.logical_and(abs(beta) <= np.sqrt(l0 / l2), np.sqrt(l0 / l2) <= m) + \
                 abs(beta) * m * (np.sqrt(l0 / l2) > m)
+            s = s * (zlb < 1) + beta ** 2 * (zlb == 1)
             z = abs(beta) / m
             z[z > 0] = np.maximum(z[z > 0], beta[z > 0] ** 2 / s[z>0])
         else:
@@ -136,6 +115,7 @@ def relaxation_solve(x, y, l0, l2, m, zlb, zub, beta, r, reltol=1e-12):
         s = beta**2 * np.logical_and(abs(beta) > np.sqrt(l0/l2), np.sqrt(l0/l2) <= m) + \
             abs(beta) * np.sqrt(l0 / l2) * np.logical_and(abs(beta) <= np.sqrt(l0/l2), np.sqrt(l0/l2) <= m) + \
             abs(beta)*m * (np.sqrt(l0/l2) > m)
+        s = s * (zlb < 1) + beta ** 2 * (zlb == 1)
         z = abs(beta)/m
         z[z > 0] = np.maximum(z[z > 0], beta[z > 0] ** 2 / s[z>0])
     else:
@@ -145,10 +125,12 @@ def relaxation_solve(x, y, l0, l2, m, zlb, zub, beta, r, reltol=1e-12):
     cost = np.dot(r, r) / 2 + l0 * sum(z) + l2 * sum(s)
     while True:
         beta, cost, r = coordinate_descent(x, beta, cost, l0, l2, m, zlb, zub, support, r, reltol)
-        if l2 != 0 and l0/l2 <= 4*m**2:
+        if l2 != 0 and l0/l2 <= m**2:
             above_threshold = np.where(zub * abs(np.matmul(r, x)) - 2*np.sqrt(l0*l2) > 0)[0]
-        else:
+        elif l2 == 0:
             above_threshold = np.where(zub * abs(np.matmul(r, x)) - l0/m > 0)[0]
+        else:
+            above_threshold = np.where(zub * abs(np.matmul(r, x)) - l0 / m - l2 * m > 0)[0]
         outliers = [i for i in above_threshold if i not in support]
         if not outliers:
             break
@@ -157,6 +139,7 @@ def relaxation_solve(x, y, l0, l2, m, zlb, zub, beta, r, reltol=1e-12):
         s = beta**2 * np.logical_and(abs(beta) > np.sqrt(l0/l2), np.sqrt(l0/l2) <= m) + \
             abs(beta) * np.sqrt(l0 / l2) * np.logical_and(abs(beta) <= np.sqrt(l0/l2), np.sqrt(l0/l2) <= m) + \
             abs(beta)*m * (np.sqrt(l0/l2) > m)
+        s = s * (zlb < 1) + beta ** 2 * (zlb == 1)
         z = abs(beta)/m
         z[z > 0] = np.maximum(z[z > 0], beta[z > 0]**2/s[z>0])
     else:
