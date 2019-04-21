@@ -63,14 +63,4 @@ def l0gurobi(x, y, l0, l2, m, lb, ub, relaxed=True):
         output_beta[i] = beta[i].x
         output_z[i] = z[i].x
         output_s[i] = s[i].x
-    # print('beta', output_beta)
-    # print('---------------\nz', output_z)
-    # print('---------------\ns', output_s)
-    # print('---------------\nobj', model.ObjVal)
-    # print('---------------\ncheckz', abs(output_beta)/m)
-    # print('---------------\nchecks', m * abs(output_beta))
-    # print('---------------\ncheckz2', np.maximum(output_beta**2/output_s, abs(output_beta)/m))
-    # print('---------------\nchecks2', output_beta**2)
-    # print('---------------\nchecks3', output_beta*np.sqrt(l0/l2))
-    print(output_z)
     return output_beta, output_z, model.ObjVal

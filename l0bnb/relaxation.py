@@ -154,7 +154,6 @@ def relaxation_solve(x, y, l0, l2, m, zlb, zub, beta, r, reltol=1e-12):
             break
         support = support | set(outliers)
     if l2 != 0:
-        # print(beta**2 * np.logical_and(abs(beta) <= np.sqrt(l0/l2), np.sqrt(l0/l2) <= m))
         s = beta**2 * np.logical_and(abs(beta) > np.sqrt(l0/l2), np.sqrt(l0/l2) <= m) + \
             abs(beta) * np.sqrt(l0 / l2) * np.logical_and(abs(beta) <= np.sqrt(l0/l2), np.sqrt(l0/l2) <= m) + \
             abs(beta)*m * (np.sqrt(l0/l2) > m)
@@ -163,7 +162,4 @@ def relaxation_solve(x, y, l0, l2, m, zlb, zub, beta, r, reltol=1e-12):
     else:
         s = np.zeros(p)
         z = abs(beta) / m
-    # print(s)
-    # print(np.minimum(np.maximum(zlb, z), zub))
-    # print(beta)
     return beta, r, np.minimum(np.maximum(zlb, z), zub), cost
