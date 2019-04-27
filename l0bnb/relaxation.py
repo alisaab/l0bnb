@@ -2,52 +2,52 @@ import copy
 import numpy as np
 
 
+def _case_one_update(criteria, ri_xi, l2, golden_ratio, xi_xi):
+    if criteria >= golden_ratio:
+        return ri_xi / (xi_xi + 2 * l2)
+    return criteria
+
+
+def _case_two_update(criteria, *args):
+    return criteria
+
+
 def coordinate_descent_loop(x, beta, index_map, l0, l2, m, zlb, zub, support, r):
     zub_active_is_zero = np.where(zub == 0)[0]
-    zlb_active_is_zero = np.where(np.logical_and(zlb == 0, zub > 0))[0]
+    zlb_active_normal = np.where(np.logical_and(zlb == 0, zub > 0))[0]
     zlb_active_is_one = np.where(zlb > 0)[0]
     set_add = support.add
     set_discard = support.discard
     dot_product = np.dot
+    golden_ratio = np.sqrt(l0/l2) if l2 != 0 else np.Inf
+    if golden_ratio <= m:
+        threshold = 2 * np.sqrt(l0 * l2)
+        update_criteria = _case_one_update
+    else:
+        threshold = l0/m + l2 * m
+        update_criteria = _case_two_update
+
     for i in zub_active_is_zero:
         r = r + dot_product(beta[i], x[:, i])
         set_discard(index_map[i])
         beta[i] = 0
 
-    if l0/l2 <= m**2:
-        for i in zlb_active_is_zero:
-            x_i = x[:, i]
-            r = r + dot_product(beta[i], x_i)
-            ri_xi = dot_product(r, x_i)
-            ri_xi_abs = abs(ri_xi)
-            if ri_xi_abs <= 2*np.sqrt(l0*l2):
-                set_discard(index_map[i])
-                beta[i] = 0
-            else:
-                if index_map[i] not in support:
-                    set_add(index_map[i])
-                if ri_xi_abs < np.sqrt(l0/l2) * np.dot(x_i, x_i) + 2 * np.sqrt(l0*l2):
-                    beta[i] = (ri_xi_abs - 2*np.sqrt(l0*l2))*np.sign(ri_xi)/np.dot(x_i, x_i)
-                elif ri_xi_abs < m*np.dot(x_i, x_i) + 2*l2*m:
-                    beta[i] = ri_xi/(np.dot(x_i, x_i) + 2*l2)
-                else:
-                    beta[i] = m
-                r = r - dot_product(beta[i], x_i)
-    else:
-        for i in zlb_active_is_zero:
-                x_i = x[:, i]
-                r = r + dot_product(beta[i], x_i)
-                ri_xi = dot_product(r, x_i)
-                ri_xi_abs = abs(ri_xi)
-                if ri_xi_abs <= l0/m + l2*m:
-                    set_discard(index_map[i])
-                    beta[i] = 0
-                else:
-                    criteria = (abs(ri_xi) - l0 / m - l2 * m) / np.dot(x_i, x_i)
-                    if index_map[i] not in support:
-                        set_add(index_map[i])
-                    beta[i] = (criteria if criteria < m else m) * np.sign(ri_xi)
-                    r = r - dot_product(beta[i], x_i)
+    for i in zlb_active_normal:
+        x_i = x[:, i]
+        xi_xi = np.dot(x_i, x_i)
+        r = r + dot_product(beta[i], x_i)
+        ri_xi = dot_product(r, x_i)
+        ri_xi_abs = abs(ri_xi)
+        if ri_xi_abs <= threshold:
+            set_discard(index_map[i])
+            beta[i] = 0
+        else:
+            if index_map[i] not in support:
+                set_add(index_map[i])
+            criteria = (ri_xi_abs - threshold) / xi_xi
+            criteria = update_criteria(criteria, ri_xi, l2, golden_ratio, xi_xi)
+            beta[i] = (criteria if criteria < m else m) * np.sign(ri_xi)
+            r = r - dot_product(beta[i], x_i)
 
     for i in zlb_active_is_one:
         x_i = x[:, i]
