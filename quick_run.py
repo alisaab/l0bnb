@@ -10,24 +10,26 @@ from l0bnb.bnb import bnb
 from profiler import profile
 from generate_data import GenData as gen_data
 
-n = 1000
-p = 100000
-rho = 0
+n = 10000
+p = 10000
+rho = 0.5
 supp_size = 5
 snr = 10
 m = 1.2
-l0 = 50
+l0 = 100
 l2 = 50
 using_upper_bound = True
 inttol = 1e-4
-gaptol = 1e-5
+gaptol = 0.01 #1e-5
 reltol = 1e-4
 branching = 'maxfrac'
 l1solver = 'l1cd'
 mu = 0.9
 
 # generate data
-x, y, features, covariance = gen_data('I', rho, n, p, supp_size, snr)
+x, y, features, covariance = gen_data('CLarge', rho, n, p, supp_size, snr) # CLarge
+print("Generated data!")
+#print(np.corrcoef(x,rowvar=False)) # to estimate corr matrix from data
 
 # from l0bnb.node import Node
 # zlb = np.zeros(p)
