@@ -45,6 +45,8 @@ class Node:
         return self.upper_bound
 
     def strong_branch_solve(self, x, l0, l2, m, support):
-        _, cost, _ = coordinate_descent(x, self.initial_guess, self.parent.lower_bound, l0, l2, m, self.zlb,
-                                        self.zub, support, self.r, 0.1)
+        golden_ratio = np.sqrt(l0 / l2) if l2 != 0 else np.Inf
+        threshold = 2 * np.sqrt(l0 * l2) if golden_ratio <= m else l0 / m + l2 * m
+        _, cost, _ = coordinate_descent(x, self.initial_guess, self.parent.lower_bound, l0, l2, golden_ratio,
+                                        threshold, m, self.zlb, self.zub, support, self.r, 0.1)
         return cost
