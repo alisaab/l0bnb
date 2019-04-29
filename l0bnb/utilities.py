@@ -32,6 +32,8 @@ def strong_branching(current_node, x, l0, l2, m, mu):
     max_s = - sys.maxsize
     support = list(current_node.lower_bound_solution.nonzero()[0])
     for i in support:
+        if int(current_node.lower_bound_z[i]) == current_node.lower_bound_z[i]:
+            continue
         new_zlb, new_zub = new_z(current_node, i)
         left_cost = Node(1, current_node, new_zlb, current_node.zub).strong_branch_solve(x, l0, l2, m, set(support))
         right_cost = Node(2, current_node, current_node.zlb, new_zub).strong_branch_solve(x, l0, l2, m, set(support))
