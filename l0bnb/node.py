@@ -23,10 +23,10 @@ class Node:
         self.lower_bound_z = None
         self.lower_bound = None
 
-    def compute_lower_bound(self, x, y, l0, l2, m, reltol, solver, initial_guess):
+    def compute_lower_bound(self, x, y, l0, l2, m, xi_xi, reltol, solver, initial_guess):
         if solver == 'l1cd':
             self.lower_bound_solution, self.r, self.lower_bound_z, self.lower_bound = \
-                relaxation_solve(x, y, l0, l2, m, self.zlb, self.zub, initial_guess, self.r, reltol)
+                relaxation_solve(x, y, l0, l2, m, xi_xi, self.zlb, self.zub, initial_guess, self.r, reltol)
         elif solver == 'gurobi':
             self.lower_bound_solution, self.lower_bound_z, self.lower_bound = \
                 l0gurobi(x, y, l0, l2, m, self.zlb, self.zub, relaxed=True)
@@ -44,9 +44,9 @@ class Node:
         self.upper_bound_solution[support] = res.x
         return self.upper_bound
 
-    def strong_branch_solve(self, x, l0, l2, m, support):
+    def strong_branch_solve(self, x, l0, l2, m, xi_xi, support):
         golden_ratio = np.sqrt(l0 / l2) if l2 != 0 else np.Inf
         threshold = 2 * np.sqrt(l0 * l2) if golden_ratio <= m else l0 / m + l2 * m
         _, cost, _ = coordinate_descent(x, self.initial_guess, self.parent.lower_bound, l0, l2, golden_ratio,
-                                        threshold, m, self.zlb, self.zub, support, self.r, 0.1)
+                                        threshold, m, xi_xi, self.zlb, self.zub, support, self.r, 0.1)
         return cost
