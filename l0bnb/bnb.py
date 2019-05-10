@@ -6,6 +6,9 @@ from .node import Node
 from .utilities import branch, is_integral
 
 
+# TODO: Compare the effect of the bigM alone
+# TODO: trees warm starts
+
 def bnb(x, y, l0, l2, m, inttol=1e-4, gaptol=1e-2, reltol=1e-4, upperbound=sys.maxsize, uppersol=None,
         branching='maxfrac', l1solver='l1cd', mu=0.9, bnb_algorithm='BFS'):
     # The number of features
