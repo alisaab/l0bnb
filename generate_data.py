@@ -149,7 +149,7 @@ def GenData(dataset, parameter, n, p, SuppSize, SNR):
 
         B = np.zeros(p)
 
-        # support = random.sample(range(p), suppSize)
+        # support = np.random.sample(range(p), SuppSize)
         # B[support] = np.random.uniform(-1, 1, size=SuppSize)
         support = list(range(SuppSize))
         B[support] = np.ones(SuppSize)
