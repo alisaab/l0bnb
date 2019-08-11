@@ -13,21 +13,22 @@ from generate_data import GenData as gen_data
 n = 1000
 p = 100000
 rho = 0.5
-supp_size = 10
-snr = 20
+supp_size = 5
+snr = 100.0
 m = 1.2
-l0 = 200
-l2 = 20
+l0 = 70.0
+l2 = 20.0
 using_upper_bound = True
 inttol = 1e-4
-gaptol = 5e-2
+gaptol = 10e-3
 reltol = 1e-3
-branching = 'strong'
+branching = 'maxfrac'  # 'strong'
 l1solver = 'l1cd'
 mu = 0.95
 bnb_algorithm = 'BFS'
-corr = 'CLarge'
+corr = 'CLarge'  # 'I'  #
 # generate data
+print("Generating data!")
 x, y, features, covariance = gen_data(corr, rho, n, p, supp_size, snr)  # CLarge
 print("Generated data!")
 # print(np.corrcoef(x,rowvar=False)) # to estimate corr matrix from data
@@ -75,8 +76,8 @@ to_write = ('n = ' + str(n) + '\np = ' + str(p) + '\nsnr = ' + str(snr) + '\nsup
             '\nbranching = ' + branching + '\nl1solver = ' + l1solver + '\ngap = ' + str(best_gap) +
             '\nnumber of nodes = ' + str(len(edges)) + '\nlevels = ' + str(max(lower_bound)) +
             '\nalgorithm = ' + str(bnb_algorithm) + '\ncorr = ' + corr + '\nrho = ' + str(rho))
-plt.text(20, 0, to_write)
-plt.savefig('9-20-s.eps', format='eps', dpi=1000)
+plt.text(20, 10, to_write)
+plt.savefig('1.eps', format='eps', dpi=1000)
 
 # upper_bound = 0.5*np.dot(y-np.matmul(X, features), y-np.matmul(X, features)) + 10*sum(features != 0)
 # print(upper_bound)

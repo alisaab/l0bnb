@@ -21,7 +21,7 @@ def bnb(x, y, l0, l2, m, inttol=1e-4, gaptol=1e-2, reltol=1e-4, upperbound=sys.m
     elif bnb_algorithm == 'DFS':
         node_queue = queue.LifoQueue()
     else:
-        raise ValueError(f'{bnb_algorithm} is not supported')
+        raise ValueError(bnb_algorithm + ' is not supported')
 
     # upper and lower bounds
     zlb = np.zeros(p)
