@@ -73,6 +73,8 @@ def coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold, m, xi_xi,
         beta[active_set] = beta_active
         cost, _ = _calculate_cost(beta[active_set], r, l0, l2, golden_ratio, m, zlb[active_set], zub[active_set])
         tol = abs(1 - old_cost / cost)
+        support = set(abs(beta).nonzero()[0])
+        print('new', cost, tol, len(support))
     return beta, cost, r
 
 
@@ -112,6 +114,7 @@ def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta, r, reltol=1e-12):
         support = set(abs(beta).nonzero()[0])
     cost, _ = _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub)
     while True:
+        print(len(support))
         beta, cost, r = coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold, m, xi_xi, zlb, zub, support,
                                            r, reltol)
         above_threshold = np.where(zub * abs(np.matmul(r, x)) - threshold > 0)[0]
@@ -120,4 +123,4 @@ def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta, r, reltol=1e-12):
             break
         support = support | set(outliers)
     cost, z = _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub)
-    return beta, r, np.minimum(np.maximum(zlb, z), zub), cost
+    return beta, r, np.minimum(np.maximum(zlb, z), zub), cost, support
