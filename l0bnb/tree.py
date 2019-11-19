@@ -49,7 +49,7 @@ class BNBTree:
         self.root = None
 
     def solve(self, l0, l2, m, gaptol=1e-2, upperbound=sys.maxsize,
-              uppersol=None, branching='maxfrac', l1solver='l1cd', mu=0.9):
+              uppersol=None, branching='maxfrac', l1solver='l1cd', mu=0.95):
         """
         Solve the nonlinear optimization problem using a branch and bound
         algorithm
@@ -153,3 +153,26 @@ class BNBTree:
                 self.leaves.append(current_node)
 
         return uppersol, upperbound, lower_bound, best_gap
+
+    def get_lower_optimal_node(self):
+        self.leaves = sorted(self.leaves)
+        if self.leaves[-1].lower_bound_value:
+            return self.leaves[-1]
+        else:
+            return self.leaves[-1].parent
+
+    @staticmethod
+    def support_list(current_node):
+        list_ = []
+        while current_node:
+            list_.append(current_node.support)
+            current_node = current_node.parent
+        return list_
+
+    def optimal_support_list(self):
+        list_ = []
+        current_node = self.get_lower_optimal_node()
+        while current_node:
+            list_.append(current_node.support)
+            current_node = current_node.parent
+        return list_
