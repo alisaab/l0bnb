@@ -28,15 +28,15 @@ def _coordinate_descent_loop(x, beta, index_map, l2, golden_ratio, threshold, m,
     zlb_active_normal = np.where(np.logical_and(zlb == 0, zub > 0))[0]
     zlb_active_is_one = np.where(zlb > 0)[0]
     set_add = support.add
-    set_discard = support.discard
+    # set_discard = support.discard
     dot_product = np.dot
-    to_remove = List()
+    # to_remove = List()
 
     for i in zub_active_is_zero:
         r = r + beta[i] * x[:, i]
-        set_discard(index_map[i])
+        # set_discard(index_map[i])
+        # to_remove.append(i)
         beta[i] = 0
-        to_remove.append(i)
 
     for i in zlb_active_normal:
         x_i = x[:, i]
@@ -44,8 +44,8 @@ def _coordinate_descent_loop(x, beta, index_map, l2, golden_ratio, threshold, m,
         ri_xi = dot_product(r, x_i)
         abs_ri_xi = np.abs(ri_xi)
         if abs_ri_xi <= threshold:
-            set_discard(index_map[i])
-            to_remove.append(i)
+            # set_discard(index_map[i])
+            # to_remove.append(i)
             beta[i] = 0
         else:
             if index_map[i] not in support:
@@ -67,7 +67,7 @@ def _coordinate_descent_loop(x, beta, index_map, l2, golden_ratio, threshold, m,
         beta[i] = (criteria if criteria < m else m) * np.sign(ri_xi)
         r = r - beta[i] * x_i
 
-    return beta, r, to_remove
+    return beta, r# , to_remove
 
 
 def coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold, m, xi_xi,
@@ -86,7 +86,7 @@ def coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold, m, xi_xi,
     while tol > reltol:
         old_cost = cost
 
-        beta_active, r, to_remove = \
+        beta_active, r = \
             _coordinate_descent_loop(x_active, beta_active, numba_set, l2,
                                      golden_ratio, threshold, m, xi_xi_active,
                                      zlb_active, zub_active, support, r)
@@ -94,12 +94,13 @@ def coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold, m, xi_xi,
         cost, _ = _calculate_cost(beta[active_set], r, l0, l2, golden_ratio, m,
                                   zlb[active_set], zub[active_set])
         tol = abs(1 - old_cost / cost)
-        active_set = np.delete(active_set, to_remove)
-        zlb_active = np.delete(zlb_active, to_remove)
-        zub_active = np.delete(zub_active, to_remove)
-        beta_active = np.delete(beta_active, to_remove)
-        xi_xi_active = np.delete(xi_xi_active, to_remove)
-        x_active = np.delete(x_active, to_remove, 1)
+        # active_set = np.delete(active_set, to_remove)
+        # zlb_active = np.delete(zlb_active, to_remove)
+        # zub_active = np.delete(zub_active, to_remove)
+        # beta_active = np.delete(beta_active, to_remove)
+        # xi_xi_active = np.delete(xi_xi_active, to_remove)
+        # x_active = np.delete(x_active, to_remove, 1)
+        # print('new', cost, tol, len(support))
     return beta, cost, r
 
 
@@ -118,7 +119,7 @@ def initial_active_set(y, x, beta, l2, golden_ratio, threshold, m, xi_xi, zlb,
         old_support = copy.deepcopy(support)
         typed_a = List()
         [typed_a.append(x) for x in active_set]
-        beta_active, r, _ = \
+        beta_active, r = \
             _coordinate_descent_loop(x_active, beta_active, typed_a, l2,
                                      golden_ratio, threshold, m, xi_xi_active,
                                      zlb_active, zub_active, support, r)
@@ -159,5 +160,6 @@ def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r,
         if not outliers:
             break
         support = support | set([i.item() for i in outliers])
+    support = set([i.item() for i in abs(beta).nonzero()[0]])
     cost, z = _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub)
     return cost, beta, np.minimum(np.maximum(zlb, z), zub), r, support
