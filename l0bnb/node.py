@@ -86,8 +86,6 @@ class Node:
         return self.lower_bound_value
 
     def upper_solve(self):
-        self.support = \
-            list(np.where(abs(self.lower_bound_solution) > 1e-4)[0])
         x_support = self.x[:, self.support]
         x_ridge = np.sqrt(2 * self.l2) * np.identity(len(self.support))
         x_upper = np.concatenate((x_support, x_ridge), axis=0)
