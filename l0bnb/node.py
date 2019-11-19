@@ -114,3 +114,15 @@ class Node:
 
     def __repr__(self):
         return self.__str__()
+
+    def __lt__(self, other):
+        if self.level == other.level:
+            if self.lower_bound_value is None and other.lower_bound_value:
+                return True
+            if other.lower_bound_value is None and self.lower_bound_value :
+                return False
+            elif not self.lower_bound_value and not other.lower_bound_value:
+                return self.parent.lower_bound_value > \
+                       other.parent.lower_bound_value
+            return self.lower_bound_value > other.lower_bound_value
+        return self.level < other.level
