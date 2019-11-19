@@ -11,7 +11,8 @@ warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
 
 @njit(cache=True)
 def _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub):
-    s = beta ** 2 * (np.abs(beta) > golden_ratio) + np.abs(beta) * golden_ratio * (np.abs(beta) <= golden_ratio)
+    s = beta ** 2 * (np.abs(beta) > golden_ratio) + \
+        np.abs(beta) * golden_ratio * (np.abs(beta) <= golden_ratio)
     s = s * (golden_ratio <= m) + np.abs(beta) * m * (golden_ratio > m)
     s = s * (zlb < 1) + beta ** 2 * (zlb == 1)
     z = np.abs(beta) / m
@@ -29,11 +30,13 @@ def _coordinate_descent_loop(x, beta, index_map, l2, golden_ratio, threshold, m,
     set_add = support.add
     set_discard = support.discard
     dot_product = np.dot
+    to_remove = List()
 
     for i in zub_active_is_zero:
         r = r + beta[i] * x[:, i]
-        # set_discard(index_map[i])
+        set_discard(index_map[i])
         beta[i] = 0
+        to_remove.append(i)
 
     for i in zlb_active_normal:
         x_i = x[:, i]
@@ -41,7 +44,8 @@ def _coordinate_descent_loop(x, beta, index_map, l2, golden_ratio, threshold, m,
         ri_xi = dot_product(r, x_i)
         abs_ri_xi = np.abs(ri_xi)
         if abs_ri_xi <= threshold:
-            # set_discard(index_map[i])
+            set_discard(index_map[i])
+            to_remove.append(i)
             beta[i] = 0
         else:
             if index_map[i] not in support:
@@ -63,47 +67,48 @@ def _coordinate_descent_loop(x, beta, index_map, l2, golden_ratio, threshold, m,
         beta[i] = (criteria if criteria < m else m) * np.sign(ri_xi)
         r = r - beta[i] * x_i
 
-    return beta, r
+    return beta, r, to_remove
 
 
-def coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold, m,
-                       xi_xi, zlb, zub, support, r, reltol):
+def coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold, m, xi_xi,
+                       zlb, zub, support, r, reltol):
+
+    active_set = sorted(list(support))
+    zlb_active = zlb[active_set]
+    zub_active = zub[active_set]
+    beta_active = beta[active_set]
+    xi_xi_active = xi_xi[active_set]
+    x_active = x[:, active_set]
+    numba_set = List()
+    [numba_set.append(x) for x in active_set]
+
     tol = 1
-    # print('old', cost, tol, len(support))
     while tol > reltol:
         old_cost = cost
-        active_set = sorted(list(support))
-        zlb_active = zlb[active_set]
-        zub_active = zub[active_set]
-        beta_active = beta[active_set]
-        xi_xi_active = xi_xi[active_set]
 
-        typed_a = List()
-        [typed_a.append(x) for x in active_set]
-
-        x_active = x[:, active_set]  # f16(x, active_set, x.shape[0], len(active_set))  #
-
-        beta_active, r = \
-            _coordinate_descent_loop(x_active, beta_active, typed_a, l2,
+        beta_active, r, to_remove = \
+            _coordinate_descent_loop(x_active, beta_active, numba_set, l2,
                                      golden_ratio, threshold, m, xi_xi_active,
                                      zlb_active, zub_active, support, r)
         beta[active_set] = beta_active
         cost, _ = _calculate_cost(beta[active_set], r, l0, l2, golden_ratio, m,
                                   zlb[active_set], zub[active_set])
         tol = abs(1 - old_cost / cost)
-        support = set(abs(beta).nonzero()[0])
-        # print('new', cost, tol, len(support))
-        # if cost > old_cost:
-        #     raise Exception('cost > old_cost')
-    # print('------------------------')
+        active_set = np.delete(active_set, to_remove)
+        zlb_active = np.delete(zlb_active, to_remove)
+        zub_active = np.delete(zub_active, to_remove)
+        beta_active = np.delete(beta_active, to_remove)
+        xi_xi_active = np.delete(xi_xi_active, to_remove)
+        x_active = np.delete(x_active, to_remove, 1)
     return beta, cost, r
 
 
-def initial_active_set(y, x, beta, l2, golden_ratio, threshold, m, xi_xi, zlb, zub, support, r):
+def initial_active_set(y, x, beta, l2, golden_ratio, threshold, m, xi_xi, zlb,
+                       zub, support, r):
     num_of_similar_supports = 0
     correlations = np.matmul(y, x)/xi_xi
-    partition = np.argpartition(-correlations, min(2000, len(beta)))
-    active_set = list(partition[0:min(2000, len(beta))])
+    partition = np.argpartition(-correlations, int(0.2*len(beta)))
+    active_set = list(partition[0: int(0.2*len(beta))])
     zlb_active = zlb[active_set]
     zub_active = zub[active_set]
     beta_active = beta[active_set]
@@ -113,40 +118,43 @@ def initial_active_set(y, x, beta, l2, golden_ratio, threshold, m, xi_xi, zlb, z
         old_support = copy.deepcopy(support)
         typed_a = List()
         [typed_a.append(x) for x in active_set]
-        beta_active, r = _coordinate_descent_loop(x_active, beta_active, typed_a, l2, golden_ratio, threshold, m,
-                                                  xi_xi_active, zlb_active, zub_active, support, r)
+        beta_active, r, _ = \
+            _coordinate_descent_loop(x_active, beta_active, typed_a, l2,
+                                     golden_ratio, threshold, m, xi_xi_active,
+                                     zlb_active, zub_active, support, r)
         if old_support == support:
             num_of_similar_supports += 1
         else:
             num_of_similar_supports = 0
-        kes, _ = _calculate_cost(beta_active, r, 50, l2, golden_ratio, m, zlb_active, zub_active)
-        print(kes, num_of_similar_supports)
     beta[active_set] = beta_active
     return support, r
 
 
-# @njit(cache=True, parallel=True)
-def above_threshold_indices(zub, r, x, threshold):
-    above_threshold = np.where(zub * abs(np.matmul(r, x)) - threshold > 0)[0]
+@njit(cache=True, parallel=True)
+def _above_threshold_indices(zub, r, x, threshold):
+    above_threshold = np.where(zub * np.abs(r@x) - threshold > 0)[0]
     return above_threshold
 
 
-def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r, reltol=1e-12):
+def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r,
+                     reltol=1e-4):
     p = x.shape[1]
     golden_ratio = np.sqrt(l0 / l2) if l2 != 0 else np.Inf
     threshold = 2 * np.sqrt(l0 * l2) if golden_ratio <= m else l0 / m + l2 * m
     if beta_init is None:
         beta = np.zeros(p)
         r = y - np.matmul(x, beta)
-        support, r = initial_active_set(y, x, beta, l2, golden_ratio, threshold, m, xi_xi, zlb, zub, {0}, r)
+        support, r = initial_active_set(y, x, beta, l2, golden_ratio, threshold,
+                                        m, xi_xi, zlb, zub, {0}, r)
     else:
         beta = beta_init
         support = set([i.item() for i in abs(beta).nonzero()[0]])
     cost, _ = _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub)
     while True:
-        beta, cost, r = coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold, m, xi_xi, zlb, zub, support,
-                                           r, reltol)
-        above_threshold = above_threshold_indices(zub, r, x, threshold)
+        beta, cost, r = \
+            coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold,
+                               m, xi_xi, zlb, zub, support, r, reltol)
+        above_threshold = _above_threshold_indices(zub, r, x, threshold)
         outliers = [i for i in above_threshold if i not in support]
         if not outliers:
             break
