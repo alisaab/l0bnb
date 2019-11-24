@@ -9,25 +9,23 @@ from scripts.generate_data import GenData as gen_data
 from l0bnb.tree import BNBTree
 
 snr = [100, 70, 50, 30, 20, 15, 10]
+snr = [30]
 
 n = 1000
 p = 100000
-rho = 0.5
+rho = 0.9
 supp_size = 20
 m = 1.2
 l0 = 100.0
 l2 = 20.0
-using_upper_bound = False
+using_upper_bound = True
 inttol = 1e-4
 gaptol = 1e-2
 reltol = 1e-5
 branching = 'maxfrac'  # 'strong'  #
 l1solver = 'l1cd'
 mu = 1
-bnb_algorithm = 'BFS'
 corr = 'I'  # 'CLarge'  #
-# generate data
-print("Generating data!")
 
 times = []
 levels = []
@@ -36,7 +34,9 @@ optimal_support = []
 
 
 for i in snr:
+    print("Generating Data!")
     x, y, features, covariance = gen_data(corr, rho, n, p, supp_size, i)
+    print("Generated Data")
     if not using_upper_bound:
         upper_bound = sys.maxsize
         upper_bound_solution = None
@@ -55,7 +55,7 @@ for i in snr:
     st = time()
     sol = t.solve(l0, l2, m, upperbound=upper_bound,
                   uppersol=upper_bound_solution, gaptol=gaptol,
-                  branching=branching, mu=mu)
+                  branching=branching, mu=mu, number_of_dfs_levels=2)
     times.append(time() - st)
     levels.append(max(sol[2]))
     num_of_nodes.append(t.number_of_nodes)

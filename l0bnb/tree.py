@@ -128,7 +128,9 @@ class BNBTree:
                 print(min_open_level, min_value, upperbound, best_gap)
                 # arrived at a solution?
                 if best_gap <= gaptol:
-                    self.leaves += [current_node] + list(self.node_queue.queue)
+                    self.leaves += [current_node] + \
+                                   list(self.node_bfs_queue.queue) + \
+                                   list(self.node_dfs_queue.queue)
                     return uppersol, upperbound, lower_bound, best_gap
                 min_open_level += 1
 
