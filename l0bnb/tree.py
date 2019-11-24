@@ -8,7 +8,7 @@ from .utilities import branch, is_integral
 
 
 class BNBTree:
-    def __init__(self, x, y, bnb_algorithm='BFS', inttol=1e-4, reltol=1e-4):
+    def __init__(self, x, y, inttol=1e-4, reltol=1e-4):
         """
         Creates a branch & bound Tree to solve the integer programming problem.
 
@@ -27,7 +27,6 @@ class BNBTree:
 
         self.x = x
         self.y = y
-        self.bnb_algorithm = bnb_algorithm
         self.inttol = inttol
         self.reltol = reltol
         self.xi_xi = np.sum(x * x, axis=0)
