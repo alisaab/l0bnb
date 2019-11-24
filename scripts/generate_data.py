@@ -5,9 +5,6 @@ import itertools
 from numpy.linalg import cholesky
 from numpy.random import normal
 import numpy as np
-from scipy.linalg import block_diag
-import pandas as pd
-from sklearn.feature_selection import VarianceThreshold
 
 
 def NormalizeMatrix(X):
@@ -125,10 +122,6 @@ def GenGaussianDataFixed(n, p, Covariance, SNR, B, D=""):
     return X, y, ydev, B
 
 
-
-
-
-
 def GenData(dataset, parameter, n, p, SuppSize, SNR):
     """
     dataset: correlation matrix: I, E, C
@@ -149,10 +142,10 @@ def GenData(dataset, parameter, n, p, SuppSize, SNR):
 
         B = np.zeros(p)
 
-        # support = np.random.sample(range(p), SuppSize)
-        # B[support] = np.random.uniform(-1, 1, size=SuppSize)
-        support = list(range(SuppSize))
-        B[support] = np.ones(SuppSize)
+        support = np.random.sample(range(p), SuppSize)
+        B[support] = np.random.uniform(-1, 1, size=SuppSize)
+        # support = list(range(SuppSize))
+        # B[support] = np.ones(SuppSize)
         ##############
 
     elif dataset == "E":

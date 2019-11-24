@@ -7,20 +7,19 @@ from scipy import optimize as sci_opt
 # import random
 
 from l0bnb.bnb import bnb
-from profiler import profile
-from generate_data import GenData as gen_data
+from scripts.generate_data import GenData as gen_data
 
-n = 1000
-p = 100000
+n = 100
+p = 10000
 rho = 0.5
-supp_size = 5
-snr = 100.0
+supp_size = 10
+snr = 10.0
 m = 1.2
 l0 = 70.0
 l2 = 20.0
 using_upper_bound = True
 inttol = 1e-4
-gaptol = 10e-3
+gaptol = 1e-2
 reltol = 1e-3
 branching = 'maxfrac'  # 'strong'
 l1solver = 'l1cd'
