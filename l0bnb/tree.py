@@ -36,20 +36,18 @@ class BNBTree:
         self.p = x.shape[1]
         self.n = x.shape[0]
 
-        if bnb_algorithm == 'BFS':
-            self.node_queue = queue.Queue()
-        # elif bnb_algorithm == 'DFS':
-        #     self.node_queue = queue.LifoQueue()
-        else:
-            raise ValueError(bnb_algorithm + ' is not supported')
+        self.node_bfs_queue = queue.Queue()
+        self.node_dfs_queue = queue.LifoQueue()
 
         self.levels = {}
         self.leaves = []
+        self.number_of_nodes = 0
 
         self.root = None
 
     def solve(self, l0, l2, m, gaptol=1e-2, upperbound=sys.maxsize,
-              uppersol=None, branching='maxfrac', l1solver='l1cd', mu=0.95):
+              uppersol=None, branching='maxfrac', l1solver='l1cd', mu=0.95,
+              number_of_dfs_levels=0):
         """
         Solve the nonlinear optimization problem using a branch and bound
         algorithm
@@ -75,6 +73,8 @@ class BNBTree:
             'l1cd' or 'gurobi'
         mu: float
             Used with strong branching
+        number_of_dfs_levels: int
+            number of levels to solve as dfs
 
         Returns
         -------
@@ -88,36 +88,42 @@ class BNBTree:
         # root node
         self.root = Node(None, zlb, zub, x=self.x, y=self.y, l0=l0, l2=l2, m=m,
                          xi_xi=self.xi_xi)
-        self.node_queue.put(self.root)
+        self.node_bfs_queue.put(self.root)
 
         # lower and upper bounds initialization
         lower_bound = {}
-        level_count = {0: 1}
+        self.levels = {0: 1}
         best_gap = upperbound
 
         min_open_level = 0
+        print(f'solving using {number_of_dfs_levels} dfs levels')
 
-        while self.node_queue.qsize() > 0:
+        while self.node_bfs_queue.qsize() > 0 or self.node_dfs_queue.qsize() > 0:
             # get node
-            current_node = self.node_queue.get()
+            if self.node_dfs_queue.qsize() > 0:
+                current_node = self.node_dfs_queue.get()
+            else:
+                current_node = self.node_bfs_queue.get()
+            # print(current_node.level, upperbound, self.levels)
             # prune?
             if current_node.parent and upperbound <= \
                     current_node.parent.lower_bound_value:
-                level_count[current_node.level] -= 1
+                self.levels[current_node.level] -= 1
                 self.leaves.append(current_node)
                 continue
 
             # calculate lower bound and update
+            self.number_of_nodes += 1
             current_lower_bound = current_node.\
                 lower_solve(l1solver, self.reltol, self.inttol)
             lower_bound[current_node.level] = \
                 min(current_lower_bound,
                     lower_bound.get(current_node.level, sys.maxsize))
-            level_count[current_node.level] -= 1
+            self.levels[current_node.level] -= 1
 
             # update gap?
-            if level_count[min_open_level] == 0:
-                del level_count[min_open_level]
+            if self.levels[min_open_level] == 0:
+                del self.levels[min_open_level]
                 min_value = lower_bound[min_open_level]
                 best_gap = (upperbound - min_value)/min_value
                 print(min_open_level, min_value, upperbound, best_gap)
@@ -143,10 +149,14 @@ class BNBTree:
                 left_node, right_node = branch(current_node, self.x, l0, l2, m,
                                                self.xi_xi, self.inttol,
                                                branching, mu)
-                level_count[current_node.level + 1] = \
-                    level_count.get(current_node.level + 1, 0) + 2
-                self.node_queue.put(right_node)
-                self.node_queue.put(left_node)
+                self.levels[current_node.level + 1] = \
+                    self.levels.get(current_node.level + 1, 0) + 2
+                if current_node.level < min_open_level + number_of_dfs_levels:
+                    self.node_dfs_queue.put(right_node)
+                    self.node_dfs_queue.put(left_node)
+                else:
+                    self.node_bfs_queue.put(right_node)
+                    self.node_bfs_queue.put(left_node)
 
             # prune?
             else:
