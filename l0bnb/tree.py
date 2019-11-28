@@ -141,6 +141,7 @@ class BNBTree:
                     upperbound = current_upper_bound
                     uppersol = current_node.lower_bound_solution
                     self.leaves.append(current_node)
+                    print('itegral:', current_node)
             # branch?
             elif current_lower_bound < upperbound:
                 current_upper_bound = current_node.upper_solve()

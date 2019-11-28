@@ -6,13 +6,13 @@ from scipy import optimize as sci_opt
 
 from scripts.generate_data import GenData as gen_data
 from l0bnb.tree import BNBTree
+from l0bnb.viz import graph_plot, show_plots
 
-snr = [1000, 500, 100, 50, 30, 10, 5, 1, 0.1]
-# snr = [10]
+snr = 10
 
 n = 1000
 p = 100000
-rho = 0.1
+rhos = [0, 0.1, 0.2, 0.3, 0.5, 0.6, 0.7]
 supp_size = 10
 m = 1.2
 l0 = 100.0
@@ -32,9 +32,9 @@ num_of_nodes = []
 optimal_support = []
 
 
-for i in snr:
-    print("Generating Data!")
-    x, y, features, covariance = gen_data(corr, rho, n, p, supp_size, i)
+for rho in rhos:
+    print(f"Solving for rho = {rho}")
+    x, y, features, covariance = gen_data(corr, rho, n, p, supp_size, snr)
     print("Generated Data")
     if not using_upper_bound:
         upper_bound = sys.maxsize
@@ -58,14 +58,19 @@ for i in snr:
     times.append(time() - st)
     levels.append(max(sol[2]))
     num_of_nodes.append(t.number_of_nodes)
-    optimal_support.append(t.get_lower_optimal_node().support)
+    optimal_support.append(list(np.where(abs(sol[0]) > inttol)[0]))  # .append(t.get_lower_optimal_node().support)
 
-plt.figure()
-plt.plot(snr, times)
-plt.figure()
-plt.plot(snr, levels)
-plt.figure()
-plt.plot(snr, num_of_nodes)
-plt.figure()
-plt.plot(snr, [len(i) for i in optimal_support])
-plt.show()
+graph_plot(rhos, times, 'p', 'time', 'time (s)', True)
+graph_plot(rhos, levels, 'p', 'levels', '# of levels', True)
+graph_plot(rhos, num_of_nodes, 'p', 'nodes', '# of nodes', True)
+graph_plot(rhos, [len(i) for i in optimal_support], 'p', 'support',
+           'support size', True)
+
+
+graph_plot(rhos, times, 'p', 'time (s)', 'solving times', False)
+graph_plot(rhos, levels, 'p', 'levels', '# of levels', False)
+graph_plot(rhos, num_of_nodes, 'p', 'nodes', '# of nodes', False)
+graph_plot(rhos, [len(i) for i in optimal_support], 'p', 'features',
+           'support size', False)
+
+show_plots()

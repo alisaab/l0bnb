@@ -4,6 +4,7 @@ import warnings
 from numba import njit, NumbaDeprecationWarning, NumbaPendingDeprecationWarning
 from numba.typed import List
 import numpy as np
+from .gurobi_solve import l0gurobi
 
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
 warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
@@ -158,6 +159,12 @@ def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r,
         above_threshold = _above_threshold_indices(zub, r, x, threshold)
         outliers = [i for i in above_threshold if i not in support]
         if not outliers:
+            active_set = sorted(list(support))
+            # print(f'solving gurobi with {len(active_set)}')
+            # beta_active, _, new_cost = \
+            #     l0gurobi(x[:, active_set], y, l0, l2, m, zlb[active_set],
+            #              zub[active_set], relaxed=True)
+            # print(abs(new_cost - cost)/cost)
             break
         support = support | set([i.item() for i in outliers])
     support = set([i.item() for i in abs(beta).nonzero()[0]])
