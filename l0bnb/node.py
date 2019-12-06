@@ -42,16 +42,17 @@ class Node:
             The bound for the features (\beta). If not specified the data will
             be inherited from the parent node
         """
-        self.parent = parent
+        # self.parent = parent
+        self.parent_cost = parent.lower_bound_value if parent else None
         self.x = kwargs.get('x', parent.x if parent else None)
         self.y = kwargs.get('y', parent.y if parent else None)
         self.xi_xi = kwargs.get('xi_xi', parent.xi_xi if parent else None)
         self.l0 = kwargs.get('l0', parent.l0 if parent else None)
         self.l2 = kwargs.get('l2', parent.l2 if parent else None)
         self.m = kwargs.get('m', parent.m if parent else None)
-        self.initial_guess = deepcopy(self.parent.lower_bound_solution) \
+        self.initial_guess = deepcopy(parent.lower_bound_solution) \
             if parent else None
-        self.r = deepcopy(self.parent.r) if parent else None
+        self.r = deepcopy(parent.r) if parent else None
 
         self.p = self.x.shape[1]
         self.level = parent.level + 1 if parent else 0
@@ -103,7 +104,7 @@ class Node:
             else l0 / m + l2 * m
         _, cost, _ = \
             coordinate_descent(x, self.initial_guess,
-                               self.parent.lower_bound_value,
+                               self.parent_cost,
                                l0, l2, golden_ratio, threshold, m, xi_xi,
                                self.zlb, self.zub, support, self.r, 0.9)
         return cost
@@ -122,7 +123,7 @@ class Node:
             if other.lower_bound_value is None and self.lower_bound_value :
                 return False
             elif not self.lower_bound_value and not other.lower_bound_value:
-                return self.parent.lower_bound_value > \
-                       other.parent.lower_bound_value
+                return self.parent_cost > \
+                       other.parent_cost
             return self.lower_bound_value > other.lower_bound_value
         return self.level < other.level

@@ -105,8 +105,8 @@ class BNBTree:
                 current_node = self.node_bfs_queue.get()
             # print(current_node.level, upperbound, self.levels)
             # prune?
-            if current_node.parent and upperbound <= \
-                    current_node.parent.lower_bound_value:
+            if current_node.parent_cost and upperbound <= \
+                    current_node.parent_cost:
                 self.levels[current_node.level] -= 1
                 self.leaves.append(current_node)
                 continue
@@ -166,25 +166,25 @@ class BNBTree:
 
         return uppersol, upperbound, lower_bound, best_gap
 
-    def get_lower_optimal_node(self):
-        self.leaves = sorted(self.leaves)
-        if self.leaves[-1].lower_bound_value:
-            return self.leaves[-1]
-        else:
-            return self.leaves[-1].parent
-
-    @staticmethod
-    def support_list(current_node):
-        list_ = []
-        while current_node:
-            list_.append(current_node.support)
-            current_node = current_node.parent
-        return list_
-
-    def optimal_support_list(self):
-        list_ = []
-        current_node = self.get_lower_optimal_node()
-        while current_node:
-            list_.append(current_node.support)
-            current_node = current_node.parent
-        return list_
+    # def get_lower_optimal_node(self):
+    #     self.leaves = sorted(self.leaves)
+    #     if self.leaves[-1].lower_bound_value:
+    #         return self.leaves[-1]
+    #     else:
+    #         return self.leaves[-1].parent
+    #
+    # @staticmethod
+    # def support_list(current_node):
+    #     list_ = []
+    #     while current_node:
+    #         list_.append(current_node.support)
+    #         current_node = current_node.parent
+    #     return list_
+    #
+    # def optimal_support_list(self):
+    #     list_ = []
+    #     current_node = self.get_lower_optimal_node()
+    #     while current_node:
+    #         list_.append(current_node.support)
+    #         current_node = current_node.parent
+    #     return list_
