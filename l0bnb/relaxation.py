@@ -36,9 +36,9 @@ def _calculate_dual_cost(y, x, beta, r, l0, l2, golden_ratio, m, zlb, zub):
         pen = pen1 + pen2
     else:
         pen = pen1
-        violations = np.maximum(0, to_change - lambda_)
+        violations = np.maximum(0, c - lambda_) * (1 - zlb) * zub
         eta = eta + violations
-        violations = np.maximum(0, -to_change - lambda_)
+        violations = np.maximum(0, -c - lambda_) * (1 - zlb) * zub
         gamma = gamma + violations
     return -np.dot(r, r) / 2 + np.dot(r, y) - sum(pen) - m * sum(gamma + eta)
 
