@@ -22,6 +22,27 @@ def _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub):
     return np.dot(r, r) / 2 + l0 * np.sum(z[z > 0]) + l2 * np.sum(s[s > 0]), z
 
 
+# @njit(cache=True)
+def _calculate_dual_cost(y, x, beta, r, l0, l2, golden_ratio, m, zlb, zub):
+    to_change = r @ x
+    lambda_ = (2 * m * l2) if golden_ratio <= m else (l0 / m + l2 * m)
+    gamma = (beta == m) * (-lambda_ - to_change)
+    eta = (beta == -m) * (-lambda_ + to_change)
+    c = to_change + gamma - eta
+    pen = (c * c / (4 * l2) - l0) * zub
+    pen1 = pen * zlb
+    if golden_ratio <= m:
+        pen2 = np.maximum(0, pen * (1 - zlb))
+        pen = pen1 + pen2
+    else:
+        pen = pen1
+        violations = np.maximum(0, to_change - lambda_)
+        eta = eta + violations
+        violations = np.maximum(0, -to_change - lambda_)
+        gamma = gamma + violations
+    return -np.dot(r, r) / 2 + np.dot(r, y) - sum(pen) - m * sum(gamma + eta)
+
+
 @njit(cache=True)
 def _coordinate_descent_loop(x, beta, index_map, l2, golden_ratio, threshold, m,
                              xi_xi, zlb, zub, support, r):
@@ -54,7 +75,7 @@ def _coordinate_descent_loop(x, beta, index_map, l2, golden_ratio, threshold, m,
             criteria = (abs_ri_xi - threshold) / xi_xi[i]
             criteria = criteria if golden_ratio > m \
                 else criteria if criteria < golden_ratio else \
-                abs_ri_xi/(xi_xi[i] + 2*l2)
+                abs_ri_xi / (xi_xi[i] + 2 * l2)
             beta[i] = (criteria if criteria < m else m) * np.sign(ri_xi)
             r = r - beta[i] * x_i
 
@@ -68,12 +89,11 @@ def _coordinate_descent_loop(x, beta, index_map, l2, golden_ratio, threshold, m,
         beta[i] = (criteria if criteria < m else m) * np.sign(ri_xi)
         r = r - beta[i] * x_i
 
-    return beta, r# , to_remove
+    return beta, r  # , to_remove
 
 
 def coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold, m, xi_xi,
                        zlb, zub, support, r, reltol):
-
     active_set = sorted(list(support))
     zlb_active = zlb[active_set]
     zub_active = zub[active_set]
@@ -108,9 +128,9 @@ def coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold, m, xi_xi,
 def initial_active_set(y, x, beta, l2, golden_ratio, threshold, m, xi_xi, zlb,
                        zub, support, r):
     num_of_similar_supports = 0
-    correlations = np.matmul(y, x)/xi_xi
-    partition = np.argpartition(-correlations, int(0.2*len(beta)))
-    active_set = list(partition[0: int(0.2*len(beta))])
+    correlations = np.matmul(y, x) / xi_xi
+    partition = np.argpartition(-correlations, int(0.2 * len(beta)))
+    active_set = list(partition[0: int(0.2 * len(beta))])
     zlb_active = zlb[active_set]
     zub_active = zub[active_set]
     beta_active = beta[active_set]
@@ -134,7 +154,7 @@ def initial_active_set(y, x, beta, l2, golden_ratio, threshold, m, xi_xi, zlb,
 
 @njit(cache=True, parallel=True)
 def _above_threshold_indices(zub, r, x, threshold):
-    above_threshold = np.where(zub * np.abs(r@x) - threshold > 0)[0]
+    above_threshold = np.where(zub * np.abs(r @ x) - threshold > 0)[0]
     return above_threshold
 
 
@@ -160,6 +180,8 @@ def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r,
         outliers = [i for i in above_threshold if i not in support]
         if not outliers:
             active_set = sorted(list(support))
+            dual_cost = _calculate_dual_cost(y, x, beta, r, l0, l2,
+                                             golden_ratio, m, zlb, zub)
             # print(f'solving gurobi with {len(active_set)}')
             # beta_active, _, new_cost = \
             #     l0gurobi(x[:, active_set], y, l0, l2, m, zlb[active_set],
@@ -169,4 +191,6 @@ def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r,
         support = support | set([i.item() for i in outliers])
     support = set([i.item() for i in abs(beta).nonzero()[0]])
     cost, z = _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub)
+    print(cost, dual_cost)
+    print((cost - dual_cost) / dual_cost)
     return cost, beta, np.minimum(np.maximum(zlb, z), zub), r, support
