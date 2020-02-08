@@ -23,12 +23,11 @@ def _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub):
 
 
 # @njit(cache=True)
-def _calculate_dual_cost(y, x, beta, r, l0, l2, golden_ratio, m, zlb, zub):
-    to_change = r @ x
+def _calculate_dual_cost(y, beta, r, rx, l0, l2, golden_ratio, m, zlb, zub):
     lambda_ = (2 * m * l2) if golden_ratio <= m else (l0 / m + l2 * m)
-    gamma = (beta == m) * (-lambda_ - to_change)
-    eta = (beta == -m) * (-lambda_ + to_change)
-    c = to_change + gamma - eta
+    gamma = (beta == m) * (-lambda_ - rx)
+    eta = (beta == -m) * (-lambda_ + rx)
+    c = rx + gamma - eta
     pen = (c * c / (4 * l2) - l0) * zub
     pen1 = pen * zlb
     if golden_ratio <= m:
@@ -40,7 +39,7 @@ def _calculate_dual_cost(y, x, beta, r, l0, l2, golden_ratio, m, zlb, zub):
         eta = eta + violations
         violations = np.maximum(0, -c - lambda_) * (1 - zlb) * zub
         gamma = gamma + violations
-    return -np.dot(r, r) / 2 + np.dot(r, y) - sum(pen) - m * sum(gamma + eta)
+    return -np.dot(r, r) / 2 + np.dot(r, y) - np.sum(pen) - m * np.sum(gamma + eta)
 
 
 @njit(cache=True)
@@ -154,8 +153,9 @@ def initial_active_set(y, x, beta, l2, golden_ratio, threshold, m, xi_xi, zlb,
 
 @njit(cache=True, parallel=True)
 def _above_threshold_indices(zub, r, x, threshold):
+    rx = r @ x
     above_threshold = np.where(zub * np.abs(r @ x) - threshold > 0)[0]
-    return above_threshold
+    return above_threshold, rx
 
 
 def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r,
@@ -176,21 +176,14 @@ def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r,
         beta, cost, r = \
             coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold,
                                m, xi_xi, zlb, zub, support, r, reltol)
-        above_threshold = _above_threshold_indices(zub, r, x, threshold)
+        above_threshold, rx = _above_threshold_indices(zub, r, x, threshold)
         outliers = [i for i in above_threshold if i not in support]
         if not outliers:
-            active_set = sorted(list(support))
-            dual_cost = _calculate_dual_cost(y, x, beta, r, l0, l2,
+            dual_cost = _calculate_dual_cost(y, beta, r, rx, l0, l2,
                                              golden_ratio, m, zlb, zub)
-            # print(f'solving gurobi with {len(active_set)}')
-            # beta_active, _, new_cost = \
-            #     l0gurobi(x[:, active_set], y, l0, l2, m, zlb[active_set],
-            #              zub[active_set], relaxed=True)
-            # print(abs(new_cost - cost)/cost)
             break
         support = support | set([i.item() for i in outliers])
     support = set([i.item() for i in abs(beta).nonzero()[0]])
     cost, z = _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub)
-    print(cost, dual_cost)
-    print((cost - dual_cost) / dual_cost)
-    return cost, beta, np.minimum(np.maximum(zlb, z), zub), r, support
+    z = np.minimum(np.maximum(zlb, z), zub)
+    return cost, dual_cost, beta, z, r, support

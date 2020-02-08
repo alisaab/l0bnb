@@ -65,11 +65,12 @@ class Node:
         self.lower_bound_value = None
         self.lower_bound_solution = None
         self.lower_bound_z = None
+        self.dual_value = None
         self.support = None
 
     def lower_solve(self, solver, reltol, inttol=None):
         if solver == 'l1cd':
-            self.lower_bound_value, self.lower_bound_solution, \
+            self.lower_bound_value, self.dual_value, self.lower_bound_solution,\
                 self.lower_bound_z, self.r, self.support = \
                 relaxation_solve(self.x, self.y, self.l0, self.l2, self.m,
                                  self.xi_xi, self.zlb, self.zub,
@@ -84,7 +85,7 @@ class Node:
                          self.zub, relaxed=True)
             self.support = \
                 list(np.where(abs(self.lower_bound_solution) > inttol)[0])
-        return self.lower_bound_value
+        return self.lower_bound_value, self.dual_value
 
     def upper_solve(self):
         x_support = self.x[:, self.support]
