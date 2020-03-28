@@ -23,23 +23,29 @@ def _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub):
 
 
 # @njit(cache=True)
-def _calculate_dual_cost(y, beta, r, rx, l0, l2, golden_ratio, m, zlb, zub):
-    lambda_ = (2 * m * l2) if golden_ratio <= m else (l0 / m + l2 * m)
-    gamma = (beta == m) * (-lambda_ - rx)
-    eta = (beta == -m) * (-lambda_ + rx)
-    c = rx + gamma - eta
+def _calculate_dual_cost(y, beta, r, rx, l0, l2, golden_ratio, m, zlb, zub,
+                         support):
+    a = 2 * m * l2
+    lambda_ = a if golden_ratio <= m else (l0 / m + l2 * m)
+    gamma = np.zeros(len(beta))
+    support = list(support)
+    gamma[support] = list(map(lambda i: 0 if abs(rx[i]) <= a
+    else (abs(rx[i]) - a) * np.sign(- rx[i]), support))
+    # gamma = (abs(beta) == m) * (-lambda_ * np.sign(-rx) - rx) #
+    c = - rx - gamma
     pen = (c * c / (4 * l2) - l0) * zub
     pen1 = pen * zlb
     if golden_ratio <= m:
+        print('yes')
         pen2 = np.maximum(0, pen * (1 - zlb))
         pen = pen1 + pen2
     else:
         pen = pen1
-        violations = np.maximum(0, c - lambda_) * (1 - zlb) * zub
-        eta = eta + violations
-        violations = np.maximum(0, -c - lambda_) * (1 - zlb) * zub
-        gamma = gamma + violations
-    return -np.dot(r, r) / 2 + np.dot(r, y) - np.sum(pen) - m * np.sum(gamma + eta)
+        gamma[support] = gamma[support]*(zlb[support])*(1 - zub[support]) + \
+                         np.maximum(0, (abs(rx[support]) - lambda_)*
+                                    (1 - zlb[support])*zub[support])
+    return -np.dot(r, r) / 2 + np.dot(r, y) - np.sum(pen) -\
+           m * np.sum(abs(gamma))
 
 
 @njit(cache=True)
@@ -180,7 +186,7 @@ def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r,
         outliers = [i for i in above_threshold if i not in support]
         if not outliers:
             dual_cost = _calculate_dual_cost(y, beta, r, rx, l0, l2,
-                                             golden_ratio, m, zlb, zub)
+                                             golden_ratio, m, zlb, zub, support)
             break
         support = support | set([i.item() for i in outliers])
     support = set([i.item() for i in abs(beta).nonzero()[0]])
