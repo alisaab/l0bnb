@@ -46,7 +46,7 @@ class BNBTree:
 
     def solve(self, l0, l2, m, gaptol=1e-2, upperbound=sys.maxsize,
               uppersol=None, branching='maxfrac', l1solver='l1cd', mu=0.95,
-              number_of_dfs_levels=0):
+              number_of_dfs_levels=0, verbose=True):
         """
         Solve the nonlinear optimization problem using a branch and bound
         algorithm
@@ -96,7 +96,8 @@ class BNBTree:
         best_gap = upperbound
 
         min_open_level = 0
-        print(f'solving using {number_of_dfs_levels} dfs levels')
+        if verbose:
+            print(f'solving using {number_of_dfs_levels} dfs levels')
 
         while self.node_bfs_queue.qsize() > 0 or self.node_dfs_queue.qsize() > 0:
             # get node
@@ -123,15 +124,15 @@ class BNBTree:
                 min(current_dual_cost,
                     dual_bound.get(current_node.level, sys.maxsize))
             self.levels[current_node.level] -= 1
-
             # update gap?
             if self.levels[min_open_level] == 0:
                 del self.levels[min_open_level]
                 min_value = max([j for i, j in dual_bound.items()
                                  if i <= min_open_level])
                 best_gap = (upperbound - min_value)/min_value
-                print(min_open_level, (min_value, lower_bound[min_open_level]),
-                      upperbound, best_gap)
+                if verbose:
+                    print(min_open_level, (min_value, lower_bound[min_open_level]),
+                          upperbound, best_gap)
                 # arrived at a solution?
                 if best_gap <= gaptol:
                     self.leaves += [current_node] + \
@@ -147,7 +148,8 @@ class BNBTree:
                     upperbound = current_upper_bound
                     uppersol = current_node.lower_bound_solution
                     self.leaves.append(current_node)
-                    print('itegral:', current_node)
+                    if verbose:
+                        print('itegral:', current_node)
             # branch?
             elif current_dual_cost < upperbound:
                 current_upper_bound = current_node.upper_solve()
@@ -170,6 +172,9 @@ class BNBTree:
             else:
                 self.leaves.append(current_node)
 
+        min_value = max([j for i, j in dual_bound.items()
+                         if i <= min_open_level])
+        best_gap = (upperbound - min_value)/min_value
         return uppersol, upperbound, lower_bound, best_gap
 
     # def get_lower_optimal_node(self):
