@@ -1,26 +1,21 @@
-import sys
 from time import time
+import _pickle as pickle
 
 from scipy import optimize as sci_opt
 import cvxpy as cp
 import numpy as np
 
-from scripts.generate_data import GenData as gen_data
 from l0bnb.tree import BNBTree
 
-P_VALUES = [1e2, 1e3]  # , 1e4, 1e5, 1e6]
+P_VALUES = [1e2, 1e3, 1e4, 1e5, 1e6]
 N = int(1e3)
 SNR = 10.0
 SUPPORT_SIZE = 10
 RHO = 0
-L0 = 100
-L2 = 5
 INT_TOL = 1e-4
 GAP_TOL = 1e-2
 REL_TOL = 1e-5
 CORR_MATRIX = 'I'
-
-M = 1.2
 
 
 def third_party_optimizer(y, x, l0, l2, m, optimizer, warm_start, gaptol,
@@ -42,17 +37,21 @@ def third_party_optimizer(y, x, l0, l2, m, optimizer, warm_start, gaptol,
     # Define the problem
     prob = cp.Problem(obj, constraints)
     B.value = warm_start
-    prob.solve(warm_start=True)
     if optimizer == 'mosek':
-        result = prob.solve(solver=cp.MOSEK, verbose=False,
+        result = prob.solve(solver=cp.MOSEK, verbose=True,
                             mosek_params={'MSK_DPAR_MIO_TOL_REL_GAP': gaptol,
-                                          'MSK_DPAR_MIO_TOL_FEAS': inttol
-                                          }
+                                          'MSK_DPAR_MIO_TOL_FEAS': inttol,
+                                          'MSK_DPAR_MIO_MAX_TIME': 3600
+                                          },
+                            warm_start=True
                             )
-    if optimizer == 'gurobi':
+    elif optimizer == 'gurobi':
         result = prob.solve(solver=cp.GUROBI, verbose=False,
                             gurobi_params={'MIPGap': gaptol,
-                                           'IntFeasTol': inttol})
+                                           'IntFeasTol': inttol,
+                                           'TimeLimit': 3600})
+    else:
+        raise Exception
     sol_time = time() - st
     return result, B.value, sol_time
 
@@ -101,24 +100,32 @@ if __name__ == '__main__':
     for p in P_VALUES:
         p = int(p)
         print(f"Solving for p = {p}")
-        x, y, features, covariance = \
-            gen_data(CORR_MATRIX, RHO, N, p, SUPPORT_SIZE, SNR)
-        upper_bound, upper_bound_solution = sys.maxsize, None  # get_upper_bound(y, x, features, L0, L2, M)
+        x = np.load(f'x_vary_p_{p}.npy')
+        y = np.load(f'y_vary_p_{p}.npy')
+        results = pickle.load(open(f'data/result_vary_p_l0learn_{p}.pkl', 'rb'))
+        features = results[p]['warm_start']
+        l0 = results[p]['l0']
+        l2 = results[p]['l2']
+        m = results[p]['m']
+        print(l0, l2, m, len(features[features != 0]))
+        upper_bound, upper_bound_solution = \
+            get_upper_bound(y, x, features, l0, l2, m)
 
         obj_value, sol, best_gap, sol_time = \
-            l0bnb_solve(y, x, L0, L2, M, REL_TOL, GAP_TOL, INT_TOL, upper_bound,
+            l0bnb_solve(y, x, l0, l2, m, REL_TOL, GAP_TOL, INT_TOL, upper_bound,
                         upper_bound_solution)
         _print(obj_value, sol_time, best_gap, sol, features, 'l0bnb')
         _package(obj_value, sol_time, best_gap, sol, features, p, 'l0bnb',
                  results)
-        obj_value, sol, sol_time = third_party_optimizer(y, x, L0, L2, M,
+
+        obj_value, sol, sol_time = third_party_optimizer(y, x, l0, l2, m,
                                                          'mosek',
                                                          upper_bound_solution,
                                                          GAP_TOL, INT_TOL)
         _print(obj_value, sol_time, GAP_TOL, sol, features, 'mosek')
         _package(obj_value, sol_time, GAP_TOL, sol, features, p, 'mosek',
                  results)
-        obj_value, sol, sol_time = third_party_optimizer(y, x, L0, L2, M,
+        obj_value, sol, sol_time = third_party_optimizer(y, x, l0, l2, m,
                                                          'gurobi',
                                                          upper_bound_solution,
                                                          GAP_TOL, INT_TOL)
