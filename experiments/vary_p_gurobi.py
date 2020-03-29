@@ -111,22 +111,14 @@ if __name__ == '__main__':
         upper_bound, upper_bound_solution = \
             get_upper_bound(y, x, features, l0, l2, m)
 
-        obj_value, sol, best_gap, sol_time = \
-            l0bnb_solve(y, x, l0, l2, m, REL_TOL, GAP_TOL, INT_TOL, upper_bound,
-                        upper_bound_solution)
-        _print(obj_value, sol_time, best_gap, sol, features, 'l0bnb')
-        _package(obj_value, sol_time, best_gap, sol, features, p, 'l0bnb',
-                 results)
-        with open(f'data/result_vary_lobnb_p_{p}.pkl', 'wb') as f:
-            pickle.dump(results, f, protocol=4)
-
         obj_value, sol, sol_time = third_party_optimizer(y, x, l0, l2, m,
-                                                         'mosek',
+                                                         'gurobi',
                                                          upper_bound_solution,
                                                          GAP_TOL, INT_TOL)
-        _print(obj_value, sol_time, GAP_TOL, sol, features, 'mosek')
-        _package(obj_value, sol_time, GAP_TOL, sol, features, p, 'mosek',
+        _print(obj_value, sol_time, GAP_TOL, sol, features, 'gurobi')
+        _package(obj_value, sol_time, GAP_TOL, sol, features, p, 'gurobi',
                  results)
-        with open(f'data/result_vary_mosek_p_{p}.pkl', 'wb') as f:
+        print('--------------------------------------------------------------')
+        with open(f'data/result_vary_gurobi_p_{p}.pkl', 'wb') as f:
             pickle.dump(results, f, protocol=4)
 
