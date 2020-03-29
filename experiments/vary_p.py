@@ -102,11 +102,11 @@ if __name__ == '__main__':
         print(f"Solving for p = {p}")
         x = np.load(f'data/x_vary_p_{p}.npy')
         y = np.load(f'data/y_vary_p_{p}.npy')
-        results = pickle.load(open(f'data/result_vary_p_l0learn_{p}.pkl', 'rb'))
-        features = results[p]['warm_start']
-        l0 = results[p]['l0']
-        l2 = results[p]['l2']
-        m = results[p]['m']
+        l0learn_results = pickle.load(open(f'data/result_vary_p_l0learn_{p}.pkl', 'rb'))
+        features = l0learn_results[p]['warm_start']
+        l0 = l0learn_results[p]['l0']
+        l2 = l0learn_results[p]['l2']
+        m = l0learn_results[p]['m']
         # print(l0, l2, m, len(features[features != 0]))
         upper_bound, upper_bound_solution = \
             get_upper_bound(y, x, features, l0, l2, m)
@@ -117,7 +117,7 @@ if __name__ == '__main__':
         _print(obj_value, sol_time, best_gap, sol, features, 'l0bnb')
         _package(obj_value, sol_time, best_gap, sol, features, p, 'l0bnb',
                  results)
-        with open(f'data/result_vary_lobnb_p_{p}.pkl', 'wb') as f:
+        with open(f'data/result_vary_l0bnb_p_{p}.pkl', 'wb') as f:
             pickle.dump(results, f, protocol=4)
 
         obj_value, sol, sol_time = third_party_optimizer(y, x, l0, l2, m,
