@@ -38,7 +38,7 @@ def third_party_optimizer(y, x, l0, l2, m, optimizer, warm_start, gaptol,
     prob = cp.Problem(obj, constraints)
     B.value = warm_start
     if optimizer == 'mosek':
-        result = prob.solve(solver=cp.MOSEK, verbose=True,
+        result = prob.solve(solver=cp.MOSEK, verbose=False,
                             mosek_params={'MSK_DPAR_MIO_TOL_REL_GAP': gaptol,
                                           'MSK_DPAR_MIO_TOL_FEAS': inttol,
                                           'MSK_DPAR_MIO_MAX_TIME': 3600
@@ -100,8 +100,8 @@ if __name__ == '__main__':
     for p in P_VALUES:
         p = int(p)
         print(f"Solving for p = {p}")
-        x = np.load(f'x_vary_p_{p}.npy')
-        y = np.load(f'y_vary_p_{p}.npy')
+        x = np.load(f'data/x_vary_p_{p}.npy')
+        y = np.load(f'data/y_vary_p_{p}.npy')
         results = pickle.load(open(f'data/result_vary_p_l0learn_{p}.pkl', 'rb'))
         features = results[p]['warm_start']
         l0 = results[p]['l0']
