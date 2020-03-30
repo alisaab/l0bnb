@@ -148,7 +148,9 @@ def GenData(dataset, parameter, n, p, SuppSize, SNR):
         ##############
 
     elif dataset == "E":
-        Covariance = np.array([[parameter ** np.abs(i - j) for j in range(p)] for i in range(p)])
+        exps = np.array([[i - j for j in range(p)] for i in range(p)])
+        exps = np.abs(exps)
+        Covariance = parameter ** exps
         B[support] = np.ones(len(support))
 
     elif dataset == "C":
