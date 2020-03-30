@@ -148,10 +148,26 @@ def GenData(dataset, parameter, n, p, SuppSize, SNR):
         ##############
 
     elif dataset == "E":
-        exps = np.array([[i - j for j in range(p)] for i in range(p)])
-        exps = np.abs(exps)
-        Covariance = parameter ** exps
         B[support] = np.ones(len(support))
+        ps = list(range(int(p / SuppSize), p, int(p / SuppSize))) + [p]
+        X_training = np.zeros((n, p))
+        y_training = np.zeros(n)
+        prev_p = 0
+        for cur_p in ps:
+            print(cur_p)
+            Covariance = np.array([[i - j for j in range(cur_p)] for i in range(cur_p)])
+            Covariance = np.abs(Covariance)
+            Covariance = parameter ** Covariance
+            X, y, _, _ = GenGaussianDataFixed(n, cur_p - prev_p, Covariance,
+                                              SNR, B[prev_p: cur_p], dataset)
+
+            X_training[:, prev_p: cur_p] = X[0:n, :]
+            y_training += y[0:n]
+            prev_p = cur_p
+
+            # X_training, scaler, factor = NormalizeMatrix(X_training)
+
+        return X_training, y_training, B, Covariance
 
     elif dataset == "C":
         Covariance = np.zeros((p, p))
