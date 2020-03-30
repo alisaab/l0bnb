@@ -155,7 +155,7 @@ def GenData(dataset, parameter, n, p, SuppSize, SNR):
         prev_p = 0
         for cur_p in ps:
             print(cur_p)
-            Covariance = np.array([[i - j for j in range(cur_p)] for i in range(cur_p)])
+            Covariance = np.array([[i - j for j in range(cur_p - prev_p)] for i in range(cur_p - prev_p)])
             Covariance = np.abs(Covariance)
             Covariance = parameter ** Covariance
             X, y, _, _ = GenGaussianDataFixed(n, cur_p - prev_p, Covariance,
