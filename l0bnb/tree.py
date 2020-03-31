@@ -129,7 +129,7 @@ class BNBTree:
                 del self.levels[min_open_level]
                 min_value = max([j for i, j in dual_bound.items()
                                  if i <= min_open_level])
-                best_gap = (upperbound - min_value)/min_value
+                best_gap = (upperbound - min_value)/abs(min_value)
                 if verbose:
                     print(min_open_level, (min_value, lower_bound[min_open_level]),
                           upperbound, best_gap)
@@ -174,7 +174,7 @@ class BNBTree:
 
         min_value = max([j for i, j in dual_bound.items()
                          if i <= min_open_level])
-        best_gap = (upperbound - min_value)/min_value
+        best_gap = (upperbound - min_value)/abs(min_value)
         return uppersol, upperbound, lower_bound, best_gap
 
     # def get_lower_optimal_node(self):
