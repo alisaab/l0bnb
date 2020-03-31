@@ -140,11 +140,11 @@ def GenData(dataset, parameter, n, p, SuppSize, SNR):
 
         ############### Remove
 
-        B = np.zeros(p)
+        # B = np.zeros(p)
 
-        support = np.random.choice(range(p), SuppSize, False)
-        B[support] = np.random.uniform(-1, 1, size=SuppSize)
-        # B[support] = np.ones(SuppSize)
+        # support = np.random.choice(range(p), SuppSize, False)
+        # B[support] = np.random.uniform(-1, 1, size=SuppSize)
+        B[support] = np.ones(SuppSize)
         ##############
 
     elif dataset == "E":
