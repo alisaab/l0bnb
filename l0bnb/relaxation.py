@@ -192,9 +192,12 @@ def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r,
         if not outliers:
             dual_cost = _calculate_dual_cost(y, beta, r, rx, l0, l2,
                                              golden_ratio, m, zlb, zub, support)
-            break
+            cost, z = _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub)
+            if (cost - dual_cost)/abs(cost) < 0.05:
+                break
+            else:
+                reltol /= 10
         support = support | set([i.item() for i in outliers])
     support = set([i.item() for i in abs(beta).nonzero()[0]])
-    cost, z = _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub)
     z = np.minimum(np.maximum(zlb, z), zub)
     return cost, dual_cost, beta, z, r, support
