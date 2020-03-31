@@ -114,6 +114,7 @@ def coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold, m, xi_xi,
     [numba_set.append(x) for x in active_set]
 
     tol = 1
+    print(reltol)
     while tol > reltol:
         old_cost = cost
 
