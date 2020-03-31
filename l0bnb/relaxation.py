@@ -197,7 +197,7 @@ def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r,
                 break
             else:
                 reltol /= 10
-                print(cost, dual_cost(cost - dual_cost)/abs(cost), reltol)
+                print(cost, dual_cost, (cost - dual_cost)/abs(cost), reltol)
         support = support | set([i.item() for i in outliers])
     support = set([i.item() for i in abs(beta).nonzero()[0]])
     z = np.minimum(np.maximum(zlb, z), zub)
