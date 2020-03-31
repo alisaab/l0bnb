@@ -30,6 +30,8 @@ def _calculate_dual_cost(y, beta, r, rx, l0, l2, golden_ratio, m, zlb, zub,
     gamma = np.zeros(len(beta))
 
     for i in support:
+        if zub[i] == 0:
+            continue
         if abs(rx[i]) <= a:
             gamma[i] = 0
         else:
@@ -114,7 +116,6 @@ def coordinate_descent(x, beta, cost, l0, l2, golden_ratio, threshold, m, xi_xi,
     [numba_set.append(x) for x in active_set]
 
     tol = 1
-    print(reltol)
     while tol > reltol:
         old_cost = cost
 
@@ -193,13 +194,14 @@ def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r,
         if not outliers:
             dual_cost = _calculate_dual_cost(y, beta, r, rx, l0, l2,
                                              golden_ratio, m, zlb, zub, support)
-            cost, z = _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub)
             if (cost - dual_cost)/abs(cost) < 0.05:
                 break
             else:
+                if reltol < 1e-10:
+                    break
                 reltol /= 10
-                print(cost, dual_cost, (cost - dual_cost)/abs(cost), reltol)
         support = support | set([i.item() for i in outliers])
     support = set([i.item() for i in abs(beta).nonzero()[0]])
+    cost, z = _calculate_cost(beta, r, l0, l2, golden_ratio, m, zlb, zub)
     z = np.minimum(np.maximum(zlb, z), zub)
     return cost, dual_cost, beta, z, r, support
