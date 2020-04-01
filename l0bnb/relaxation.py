@@ -194,7 +194,7 @@ def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r,
         if not outliers:
             dual_cost = _calculate_dual_cost(y, beta, r, rx, l0, l2,
                                              golden_ratio, m, zlb, zub, support)
-            if (cost - dual_cost)/abs(cost) < 0.05:
+            if (cost - dual_cost)/abs(cost) < 0.01:
                 break
             else:
                 if reltol < 1e-10:
