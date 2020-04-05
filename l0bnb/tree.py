@@ -39,7 +39,7 @@ class BNBTree:
         self.node_dfs_queue = queue.LifoQueue()
 
         self.levels = {}
-        self.leaves = []
+        # self.leaves = []
         self.number_of_nodes = 0
 
         self.root = None
@@ -110,7 +110,7 @@ class BNBTree:
             if current_node.parent_cost and upperbound <= \
                     current_node.parent_cost:
                 self.levels[current_node.level] -= 1
-                self.leaves.append(current_node)
+                # self.leaves.append(current_node)
                 continue
 
             # calculate lower bound and update
@@ -135,9 +135,9 @@ class BNBTree:
                           upperbound, best_gap)
                 # arrived at a solution?
                 if best_gap <= gaptol:
-                    self.leaves += [current_node] + \
-                                   list(self.node_bfs_queue.queue) + \
-                                   list(self.node_dfs_queue.queue)
+                    # self.leaves += [current_node] + \
+                    #                list(self.node_bfs_queue.queue) + \
+                    #                list(self.node_dfs_queue.queue)
                     return uppersol, upperbound, lower_bound, best_gap
                 min_open_level += 1
 
@@ -147,7 +147,7 @@ class BNBTree:
                 if current_upper_bound < upperbound:
                     upperbound = current_upper_bound
                     uppersol = current_node.lower_bound_solution
-                    self.leaves.append(current_node)
+                    # self.leaves.append(current_node)
                     if verbose:
                         print('itegral:', current_node)
             # branch?
@@ -170,7 +170,8 @@ class BNBTree:
 
             # prune?
             else:
-                self.leaves.append(current_node)
+                pass
+                # self.leaves.append(current_node)
 
         min_value = max([j for i, j in dual_bound.items()
                          if i <= min_open_level])
