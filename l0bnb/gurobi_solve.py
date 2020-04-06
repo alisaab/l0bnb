@@ -70,14 +70,14 @@ def l0gurobi(x, y, l0, l2, m, lb, ub, relaxed=True):
     return output_beta, output_z, model.ObjVal
 
 
-def l0mosek(y, x, l0, l2, m, warm_start, gaptol, inttol):
-    st = time()
+def l0mosek(y, x, l0, l2, m, lb, ub):
+    # st = time()
     model = msk.Model()
     n = x.shape[0]
     p = x.shape[1]
 
     beta = model.variable('beta', p, msk.Domain.inRange(-m, m))
-    z = model.variable('z', p, msk.Domain.binary())
+    z = model.variable('z', p, msk.Domain.inRange(lb, ub))
     s = model.variable('s', p, msk.Domain.greaterThan(0))
     r = model.variable('r', n, msk.Domain.unbounded())
     t = model.variable('t', n, msk.Domain.greaterThan(0))
@@ -100,13 +100,11 @@ def l0mosek(y, x, l0, l2, m, warm_start, gaptol, inttol):
     model.objective(msk.ObjectiveSense.Minimize,
                     msk.Expr.add([t_exp, z_exp, s_exp]))
 
-    z.setLevel((warm_start != 0) * 1.0)
-
-    model.setSolverParam("log", 1)
-    model.setSolverParam("mioTolRelGap", gaptol)
-    model.setSolverParam("mioMaxTime", 7200)
-    model.setSolverParam("mioTolFeas", inttol)
+    model.setSolverParam("log", 0)
+    # model.setSolverParam("mioTolRelGap", gaptol)
+    # model.setSolverParam("mioMaxTime", 7200)
+    # model.setSolverParam("mioTolFeas", inttol)
     model.setLogHandler(sys.stdout)
     model.solve()
 
-    return model.primalObjValue(), beta.level(), time() - st
+    return beta.level(), z.level(), model.primalObjValue(), model.DualObjValue

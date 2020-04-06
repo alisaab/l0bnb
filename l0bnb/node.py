@@ -4,7 +4,7 @@ import numpy as np
 from scipy import optimize as sci_opt
 
 from .relaxation import relaxation_solve, coordinate_descent
-from .gurobi_solve import l0gurobi
+from .gurobi_solve import l0gurobi, l0mosek
 
 
 class Node:
@@ -85,6 +85,11 @@ class Node:
                          self.zub, relaxed=True)
             self.support = \
                 list(np.where(abs(self.lower_bound_solution) > inttol)[0])
+        elif solver == 'mosek':
+            self.lower_bound_solution, self.lower_bound_z, \
+                self.lower_bound_value, self.dual_value = \
+                l0mosek(self.x, self.y, self.l0, self.l2, self.m, self.zlb,
+                        self.zub)
         return self.lower_bound_value, self.dual_value
 
     def upper_solve(self):
