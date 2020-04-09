@@ -5,7 +5,10 @@ import numpy as np
 
 
 def l0gurobi(x, y, l0, l2, m, lb, ub, relaxed=True):
-    from gurobipy import Model, GRB, QuadExpr, LinExpr
+    try:
+        from gurobipy import Model, GRB, QuadExpr, LinExpr
+    except ModuleNotFoundError:
+        raise Exception('Gurobi is not installed')
     model = Model()  # the optimization model
     n = x.shape[0]  # number of samples
     p = x.shape[1]  # number of features
@@ -69,7 +72,10 @@ def l0gurobi(x, y, l0, l2, m, lb, ub, relaxed=True):
 
 
 def l0mosek(x, y, l0, l2, m, lb, ub):
-    import mosek.fusion as msk
+    try:
+        import mosek.fusion as msk
+    except ModuleNotFoundError:
+        raise Exception('Mosek is not installed')
     # st = time()
     model = msk.Model()
     n = x.shape[0]
