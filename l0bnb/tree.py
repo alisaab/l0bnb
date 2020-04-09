@@ -1,7 +1,9 @@
+import time
 import queue
 import sys
 
 import numpy as np
+from scipy import optimize as sci_opt
 
 from .node import Node
 from .utilities import branch, is_integral
@@ -10,21 +12,20 @@ from .utilities import branch, is_integral
 class BNBTree:
     def __init__(self, x, y, inttol=1e-4, reltol=1e-4):
         """
-        Creates a branch & bound Tree to solve the integer programming problem.
+        Initiate a BnB Tree to solve the least squares regression problem with
+        l0l2 regularization
 
-        :param x: np.array
-            n x p array
-        :param y: np.array
-            n x 1 array
-        :param bnb_algorithm: str
-            'BFS' or 'DFS'
-        :param inttol: float
-            the tolerance for considering a number an integer
-        :param reltol: float
-            The relative tolerance of the change in the objective value after
-            which the relaxation solve would be terminated
+        Parameters
+        ----------
+        x: np.array
+            n x p numpy array
+        y: np.array
+            1 dimensional numpy array of size n
+        inttol: float
+            The integral tolerance of a variable.
+        reltol: float
+            primal-dual relative tolerance
         """
-
         self.x = x
         self.y = y
         self.inttol = inttol
@@ -44,12 +45,11 @@ class BNBTree:
 
         self.root = None
 
-    def solve(self, l0, l2, m, gaptol=1e-2, upperbound=sys.maxsize,
-              uppersol=None, branching='maxfrac', l1solver='l1cd', mu=0.95,
-              number_of_dfs_levels=0, verbose=True):
+    def solve(self, l0, l2, m, gaptol=1e-2, warm_start=None, mu=0.95,
+              branching='maxfrac', l1solver='l1cd', number_of_dfs_levels=0,
+              verbose=True):
         """
-        Solve the nonlinear optimization problem using a branch and bound
-        algorithm
+        Solve the least squares problem with l0l2 regularization
 
         Parameters
         ----------
@@ -58,28 +58,45 @@ class BNBTree:
         l2: float
             The second norm coefficient
         m: float
-            features bound
+            features bound (big M)
         gaptol: float
             the relative gap between the upper and lower bound after which the
             algorithm will be terminated
-        upperbound: float
-            the upper bound of the objective value
-        uppersol: np.array
-            (p x 1) array representing the solution of the upper bound
+        warm_start: np.array
+            (p x 1) array representing a warm start
         branching: str
             'maxfrac' or 'strong'
         l1solver: str
-            'l1cd' or 'gurobi'
+            'l1cd', 'gurobi' or 'mosek'
         mu: float
             Used with strong branching
         number_of_dfs_levels: int
             number of levels to solve as dfs
-
+        verbose: int
+            print progress
         Returns
         -------
-        dict
-            The solution
+        tuple
+            uppersol, upperbound, lower_bound, best_gap
         """
+        st = time.time()
+        if not warm_start:
+            upperbound = sys.maxsize
+            uppersol = None
+        else:
+            if verbose:
+                print("using a warm start")
+            support = np.nonzero(warm_start)[0]
+            x_support = self.x[:, support]
+            x_ridge = np.sqrt(2 * l2) * np.identity(len(support))
+            x_upper = np.concatenate((x_support, x_ridge), axis=0)
+            y_upper = np.concatenate((self.y, np.zeros(len(support))), axis=0)
+            res = sci_opt.lsq_linear(x_upper, y_upper, (-m, m))
+            upperbound = res.cost + l0 * len(support)
+            uppersol = warm_start
+            uppersol[support] = res.x
+        if verbose:
+            print(f"initializing using a warm start took {time.time() - st}")
         # upper and lower bounds
         zlb = np.zeros(self.p)
         zub = np.ones(self.p)
@@ -93,9 +110,9 @@ class BNBTree:
         lower_bound = {}
         dual_bound = {}
         self.levels = {0: 1}
-        best_gap = upperbound
 
         min_open_level = 0
+
         if verbose:
             print(f'solving using {number_of_dfs_levels} dfs levels')
 
@@ -129,7 +146,7 @@ class BNBTree:
                 del self.levels[min_open_level]
                 min_value = max([j for i, j in dual_bound.items()
                                  if i <= min_open_level])
-                best_gap = (upperbound - min_value)/abs(min_value)
+                best_gap = (upperbound - min_value)/abs(upperbound)
                 if verbose:
                     print(min_open_level, (min_value, lower_bound[min_open_level]),
                           upperbound, best_gap)
@@ -175,7 +192,7 @@ class BNBTree:
 
         min_value = max([j for i, j in dual_bound.items()
                          if i <= min_open_level])
-        best_gap = (upperbound - min_value)/abs(min_value)
+        best_gap = (upperbound - min_value)/abs(upperbound)
         return uppersol, upperbound, lower_bound, best_gap
 
     # def get_lower_optimal_node(self):
