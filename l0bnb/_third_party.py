@@ -3,11 +3,9 @@ import sys
 
 import numpy as np
 
-from gurobipy import Model, GRB, QuadExpr, LinExpr
-import mosek.fusion as msk
-
 
 def l0gurobi(x, y, l0, l2, m, lb, ub, relaxed=True):
+    from gurobipy import Model, GRB, QuadExpr, LinExpr
     model = Model()  # the optimization model
     n = x.shape[0]  # number of samples
     p = x.shape[1]  # number of features
@@ -71,6 +69,7 @@ def l0gurobi(x, y, l0, l2, m, lb, ub, relaxed=True):
 
 
 def l0mosek(x, y, l0, l2, m, lb, ub):
+    import mosek.fusion as msk
     # st = time()
     model = msk.Model()
     n = x.shape[0]
