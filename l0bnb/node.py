@@ -4,7 +4,7 @@ import numpy as np
 from scipy import optimize as sci_opt
 
 from .relaxation import relaxation_solve, coordinate_descent
-from .gurobi_solve import l0gurobi, l0mosek
+from ._third_party import l0gurobi, l0mosek
 
 
 class Node:

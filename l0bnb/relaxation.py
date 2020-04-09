@@ -4,7 +4,7 @@ import warnings
 from numba import njit, NumbaDeprecationWarning, NumbaPendingDeprecationWarning
 from numba.typed import List
 import numpy as np
-from .gurobi_solve import l0gurobi
+from ._third_party import l0gurobi
 
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
 warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)

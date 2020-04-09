@@ -111,3 +111,11 @@ venv.bak/
 
 # eps
 *.eps
+
+# other
+scripts/*
+experiments/*
+data/*
+*.ipynb
+profiler.py
+try.R
