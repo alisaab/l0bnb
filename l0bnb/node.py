@@ -90,6 +90,8 @@ class Node:
                 self.lower_bound_value, self.dual_value = \
                 l0mosek(self.x, self.y, self.l0, self.l2, self.m, self.zlb,
                         self.zub)
+            self.support = \
+                list(np.where(abs(self.lower_bound_solution) > inttol)[0])
         return self.lower_bound_value, self.dual_value
 
     def upper_solve(self):
