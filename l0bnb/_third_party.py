@@ -70,7 +70,7 @@ def l0gurobi(x, y, l0, l2, m, lb, ub, relaxed=True):
     return output_beta, output_z, model.ObjVal
 
 
-def l0mosek(y, x, l0, l2, m, lb, ub):
+def l0mosek(x, y, l0, l2, m, lb, ub):
     # st = time()
     model = msk.Model()
     n = x.shape[0]
@@ -107,4 +107,4 @@ def l0mosek(y, x, l0, l2, m, lb, ub):
     model.setLogHandler(sys.stdout)
     model.solve()
 
-    return beta.level(), z.level(), model.primalObjValue(), model.DualObjValue
+    return beta.level(), z.level(), model.primalObjValue(), model.dualObjValue()
