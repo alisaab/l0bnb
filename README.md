@@ -1,3 +1,3 @@
-# Sparse Regression at Scale: Branch-and-Bound with First-Order Optimization Roots
+# Sparse Regression at Scale: Branch-and-Bound rooted in First-Order Optimization
 
 More details to be added soon.
