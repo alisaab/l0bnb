@@ -1,2 +1,3 @@
-# l0BnB
-Solves the best subset selection problem
+# Sparse Regression at Scale: Branch-and-Bound with First-Order Optimization Roots
+
+More details to be added soon.
