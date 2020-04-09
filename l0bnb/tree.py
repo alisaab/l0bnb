@@ -47,7 +47,7 @@ class BNBTree:
 
     def solve(self, l0, l2, m, gaptol=1e-2, warm_start=None, mu=0.95,
               branching='maxfrac', l1solver='l1cd', number_of_dfs_levels=0,
-              verbose=True):
+              verbose=False):
         """
         Solve the least squares problem with l0l2 regularization
 
@@ -77,10 +77,10 @@ class BNBTree:
         Returns
         -------
         tuple
-            uppersol, upperbound, lower_bound, best_gap
+            uppersol, upperbound, lower_bound, best_gap, sol_time
         """
         st = time.time()
-        if not warm_start:
+        if warm_start is None:
             upperbound = sys.maxsize
             uppersol = None
         else:
@@ -148,14 +148,16 @@ class BNBTree:
                                  if i <= min_open_level])
                 best_gap = (upperbound - min_value)/abs(upperbound)
                 if verbose:
-                    print(min_open_level, (min_value, lower_bound[min_open_level]),
-                          upperbound, best_gap)
+                    print(f'l: {min_open_level}, (d: {min_value}, '
+                          f'p: {lower_bound[min_open_level]}), u: {upperbound},'
+                          f' g: {best_gap}, t: {time.time() - st} s')
                 # arrived at a solution?
                 if best_gap <= gaptol:
                     # self.leaves += [current_node] + \
                     #                list(self.node_bfs_queue.queue) + \
                     #                list(self.node_dfs_queue.queue)
-                    return uppersol, upperbound, lower_bound, best_gap
+                    return uppersol, upperbound, lower_bound, best_gap, \
+                           time.time() - st
                 min_open_level += 1
 
             # integral solution?
@@ -193,7 +195,7 @@ class BNBTree:
         min_value = max([j for i, j in dual_bound.items()
                          if i <= min_open_level])
         best_gap = (upperbound - min_value)/abs(upperbound)
-        return uppersol, upperbound, lower_bound, best_gap
+        return uppersol, upperbound, lower_bound, best_gap, time.time() - st
 
     # def get_lower_optimal_node(self):
     #     self.leaves = sorted(self.leaves)
