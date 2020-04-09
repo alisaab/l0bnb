@@ -4,7 +4,6 @@ import warnings
 from numba import njit, NumbaDeprecationWarning, NumbaPendingDeprecationWarning
 from numba.typed import List
 import numpy as np
-from ._third_party import l0gurobi
 
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
 warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
@@ -194,10 +193,10 @@ def relaxation_solve(x, y, l0, l2, m, xi_xi, zlb, zub, beta_init, r,
         if not outliers:
             dual_cost = _calculate_dual_cost(y, beta, r, rx, l0, l2,
                                              golden_ratio, m, zlb, zub, support)
-            if (cost - dual_cost)/abs(cost) < 0.001:
+            if (cost - dual_cost)/abs(cost) < reltol:
                 break
             else:
-                if reltol < 1e-10:
+                if reltol < 1e-8:
                     break
                 reltol /= 10
         support = support | set([i.item() for i in outliers])
