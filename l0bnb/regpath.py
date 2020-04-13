@@ -37,13 +37,13 @@ def fit_path(x,
             m_mulitplier. Defaults to 1.2. Larger values can increase the
             run time.
         lambda_0_grid (list): A list of user-specified lambda_0's. The list
-        should be sorted in descending order. By default, this option is not
-        used since the toolkit automatically selects a grid of lambda_0's.
-        Using this option is not recommended, unless the default grid is not
-        returning the desired number of nonzeros.
+            should be sorted in descending order. By default, this option is not
+            used since the toolkit automatically selects a grid of lambda_0's.
+            Using this option is not recommended, unless the default grid is not
+            returning the desired number of nonzeros.
         lambda_0_grid_warm_start (list): A list of indices of the nonzero
-        elements in the warm start. This is only used for the first solution
-        in lambda_0_grid (if lambda_0_grid is specified by the user).
+            elements in the warm start. This is only used for the first solution
+            in lambda_0_grid (if lambda_0_grid is specified by the user).
         gap_tol (float): The tolerance for the relative MIP gap.
             Defaults to 0.01.
 
