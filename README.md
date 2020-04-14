@@ -42,10 +42,10 @@ sols = fit_path(X, y, lambda_2 = 0.01, max_nonzeros = 10)
 
 """
 sols is a list of solutions, each corresponding to a different lambda_0.
-Below we inspect the 4th solution in the list.
+Below we inspect the solution with index 4.
 The estimated coefficients vector "b_estimated" and the intercept term can be accessed as follows:
 """
-b_estimated = sol[4]["B"]
+b_estimated = sol[4]["B"] # a numpy array.
 intercept = sol[4]["B0"]
 
 # To check the nonzero indices in b_estimated:
