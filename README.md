@@ -7,7 +7,7 @@ L0BnB is a scalable global optimization framework for solving linear regression 
 
 <img src="formulation.png" width = 300>
 
-where the L0 norm counts the number of nonzeros in the coefficients vector B. Here L0 norm performs variable selection, while the L2 norm adds shrinkage which can be effective in low-signal settings. L0BnB implements a custom branch-and-bound (BnB) framework that leverages a  highly specialized first-order method to solve the node subproblems. It achieves over 3600x speed-ups compared to the state-of-the-art mixed integer programming (MIP) solvers, and can scale to problems where p ~ 10^7. For more details, check out our paper *Sparse Regression at Scale: Branch-and-Bound rooted in First Order Optimization*.
+where the L0 norm counts the number of nonzeros in the coefficients vector B. Here the L0 norm performs variable selection, while the L2 norm adds shrinkage which can be effective in low-signal settings. L0BnB implements a custom branch-and-bound (BnB) framework that leverages a highly specialized first-order method to solve the node subproblems. It achieves over 3600x speed-ups compared to the state-of-the-art mixed integer programming (MIP) solvers, and can scale to problems where the number of features p ~ 10^7. For more details, check out our paper *Sparse Regression at Scale: Branch-and-Bound rooted in First Order Optimization*.
 
 ## Installation
 The toolkit is implemented in Python 3. To install it, run the following command:
