@@ -12,7 +12,7 @@ where the L0 norm counts the number of nonzeros in the coefficients vector B. He
 ## Installation
 The toolkit is implemented in Python 3. To install it, run the following command:
 ```bash
-pip install L0BnB
+pip install l0bnb
 ```
 
 ## A Quick Start in Python
