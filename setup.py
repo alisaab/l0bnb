@@ -11,7 +11,7 @@ def readme():
 setup(
     name="l0bnb",
     description="Scalable algorithms for L0 L2-regularized regression",
-    author="Ali Saab, Hussein Hazimeh, Rahul Mazumder",
+    author="Hussein Hazimeh, Rahul Mazumder, Ali Saab",
     author_email="alikassemsaab@gmail.com",
     url='https://github.com/alisaab/l0bnb',
     download_url="https://github.com/alisaab/l0bnb/archive/0.0.1.tar.gz",
@@ -21,5 +21,5 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     license=LICENSE,
-    long_description=readme(),
+    # long_description=readme(),
 )
