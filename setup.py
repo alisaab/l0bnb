@@ -10,7 +10,7 @@ def readme():
 
 setup(
     name="l0bnb",
-    description="least squares regression with l0l2 regularization",
+    description="Scalable algorithms for L0 L2-regularized regression",
     author="Ali Saab",
     author_email="alikassemsaab@gmail.com",
     install_requires=["numpy >= 1.18.2", "scipy >= 1.4.1", "numba >= 0.48.0",
