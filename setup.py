@@ -15,7 +15,7 @@ setup(
     author_email="alikassemsaab@gmail.com",
     url='https://github.com/alisaab/l0bnb',
     download_url="https://github.com/alisaab/l0bnb/archive/0.0.5.tar.gz",
-    install_requires=["numpy >= 1.18.2", "scipy >= 1.4.1", "numba >= 0.48.0"],
+    install_requires=["numpy >= 1.18.1", "scipy >= 1.4.1", "numba >= 0.48.0"],
     version="0.0.5",
     packages=find_packages(),
     include_package_data=True,

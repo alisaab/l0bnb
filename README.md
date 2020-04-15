@@ -12,7 +12,7 @@ where the L0 norm counts the number of nonzeros in the coefficients vector B. He
 ## Installation
 The toolkit is implemented in Python 3. To install it, run the following command:
 ```bash
-pip install L0BnB
+pip install l0bnb
 ```
 
 ## A Quick Start in Python
@@ -43,8 +43,8 @@ sols is a list of solutions, each corresponding to a different lambda_0.
 Below we inspect the solution with index 4.
 The estimated coefficients vector "b_estimated" and the intercept term can be accessed as follows:
 """
-b_estimated = sol[4]["B"] # a numpy array.
-intercept = sol[4]["B0"]
+b_estimated = sols[4]["B"] # a numpy array.
+intercept = sols[4]["B0"]
 
 # To check the nonzero indices in b_estimated:
 print("Nonzero indices in b_estimated: ", np.nonzero(b_estimated)[0])
