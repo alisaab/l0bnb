@@ -10,14 +10,16 @@ def readme():
 
 setup(
     name="l0bnb",
-    description="least squares regression with l0l2 regularization",
-    author="Ali Saab",
+    description="Scalable algorithms for L0 L2-regularized regression",
+    author="Hussein Hazimeh, Rahul Mazumder, Ali Saab",
     author_email="alikassemsaab@gmail.com",
-    install_requires=["numpy >= 1.18.2", "scipy >= 1.4.1", "numba >= 0.48.0",
-                      "matplotlib >= 3.2.1"],
-    version="0.0.1",
+    url='https://github.com/alisaab/l0bnb',
+    download_url="https://github.com/alisaab/l0bnb/archive/0.0.5.tar.gz",
+    install_requires=["numpy >= 1.18.1", "scipy >= 1.4.1", "numba >= 0.48.0"],
+    version="0.0.5",
     packages=find_packages(),
     include_package_data=True,
     license=LICENSE,
     long_description=readme(),
+    long_description_content_type="text/markdown"
 )
