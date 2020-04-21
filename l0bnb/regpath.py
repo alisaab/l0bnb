@@ -13,7 +13,8 @@ def fit_path(x,
              m_multiplier=1.2,
              lambda_0_grid=None,
              lambda_0_grid_warm_start=None,
-             gap_tol=1e-2):
+             gap_tol=1e-2,
+             solver='l0bnb'):
     """Solves the L0L2-regularized least squares problem over a sequence of lambda_0's.
 
     Note:
@@ -89,6 +90,7 @@ def fit_path(x,
             m = np.max(np.abs(warm_start)) * m_multiplier
         else:
             warm_start = None
+            m = 10**20 # A sufficiently larger big-M.
 
     terminate = False
     sols = []
@@ -97,14 +99,25 @@ def fit_path(x,
     while (not terminate):
         #print("Lambda_0: ", current_lambda_0)
         #print("m: ", m)
-        tree = BNBTree(x_centered, y_centered)
-        uppersol, _, _, _, _ = tree.solve(
-            current_lambda_0,
-            lambda_2,
-            m,
-            warm_start=warm_start,
-            gaptol=gap_tol)
-
+        if solver == 'l0bnb':
+            tree = BNBTree(x_centered, y_centered)
+            uppersol, _, _, _, _ = tree.solve(
+                current_lambda_0,
+                lambda_2,
+                m,
+                warm_start=warm_start,
+                gaptol=gap_tol)
+        elif solver == 'gurobi':
+            from ._third_party import l0gurobi
+            uppersol, _, _ = l0gurobi(
+                x_centered,
+                y_centered,
+                current_lambda_0,
+                lambda_2,
+                m,
+                lb=np.zeros(x_centered.shape[1]),
+                ub=np.ones(x_centered.shape[1]),
+                relaxed=False)
         # Save the sol.
         beta_unscaled = uppersol * beta_multiplier
         b0 = mean_y - np.dot(mean_x, beta_unscaled)
