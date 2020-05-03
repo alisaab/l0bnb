@@ -57,7 +57,7 @@ def branch(current_node, x, l0, l2, m, xi_xi, tol, branching_type, mu):
     #     branching_variable = \
     #         strong_branching(current_node, x, l0, l2, m, xi_xi, mu)
     else:
-        raise ValueError('branching type' + branching_type + 'is not supported')
+        raise ValueError(f'branching type {branching_type} is not supported')
     new_zlb, new_zub = new_z(current_node, branching_variable)
     right_node = Node(current_node, new_zlb, current_node.zub)
     left_node = Node(current_node, current_node.zlb, new_zub)

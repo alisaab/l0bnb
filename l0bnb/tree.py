@@ -30,7 +30,7 @@ class BNBTree:
         self.y = y
         self.int_tol = int_tol
         self.rel_tol = rel_tol
-        self.xi_norm = np.linalg.norm(x, axis=0)**2
+        self.xi_norm = np.linalg.norm(x, axis=0) ** 2
 
         # The number of features
         self.p = x.shape[1]
@@ -47,7 +47,7 @@ class BNBTree:
 
     def solve(self, l0, l2, m, gap_tol=1e-2, warm_start=None, mu=0.95,
               branching='maxfrac', l1solver='l1cd', number_of_dfs_levels=0,
-              verbose=False):
+              verbose=False, time_limit=3600):
         """
         Solve the least squares problem with l0l2 regularization
 
@@ -74,13 +74,14 @@ class BNBTree:
             number of levels to solve as dfs
         verbose: int
             print progress
+        time_limit:
         Returns
         -------
         tuple
             upper_sol, upper_bound, lower_bound, best_gap, sol_time
         """
         st = time.time()
-        upper_bound, upper_beta, support = self.\
+        upper_bound, upper_beta, support = self. \
             _warm_start(warm_start, verbose, l0, l2, m)
         if verbose:
             print(f"initializing took {time.time() - st} seconds")
@@ -103,7 +104,9 @@ class BNBTree:
         if verbose:
             print(f'{number_of_dfs_levels} levels of depth used')
 
-        while self.bfs_queue.qsize() > 0 or self.dfs_queue.qsize() > 0:
+        while (self.bfs_queue.qsize() > 0 or self.dfs_queue.qsize() > 0) and \
+                (time.time() - st < time_limit):
+
             # get current node
             if self.dfs_queue.qsize() > 0:
                 curr_node = self.dfs_queue.get()
@@ -117,7 +120,7 @@ class BNBTree:
                 continue
 
             # calculate primal and dual values
-            curr_primal, curr_dual = self.\
+            curr_primal, curr_dual = self. \
                 _solve_node(curr_node, l0, l2, m, l1solver, lower_bound,
                             dual_bound)
 
@@ -206,7 +209,7 @@ class BNBTree:
                 print("used a warm start")
             support = np.nonzero(warm_start)[0]
             upper_bound, upper_beta = \
-                upper_bound_solve(self.x, self.y, l0, l2,  m, support)
+                upper_bound_solve(self.x, self.y, l0, l2, m, support)
             return upper_bound, upper_beta, support
 
     # def get_lower_optimal_node(self):
