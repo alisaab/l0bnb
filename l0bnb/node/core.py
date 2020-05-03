@@ -2,9 +2,8 @@ from copy import deepcopy
 
 import numpy as np
 
-from ..relaxation import cd_solve
+from ..relaxation import cd_solve, l0gurobi, l0mosek
 from ._utils import upper_bound_solve
-# from ._third_party import l0gurobi, l0mosek
 
 
 class Node:
@@ -71,7 +70,7 @@ class Node:
         self.upper_beta = None
         self.primal_beta = None
 
-    def lower_solve(self, l0, l2, m, solver, rel_tol, int_tol=None):
+    def lower_solve(self, l0, l2, m, solver, rel_tol, int_tol=1e-6):
         if solver == 'l1cd':
             sol = cd_solve(x=self.x, y=self.y, l0=l0, l2=l2, m=m, zlb=self.zlb,
                            zub=self.zub, xi_norm=self.xi_norm, rel_tol=rel_tol,
@@ -82,22 +81,23 @@ class Node:
             self.z = sol.z
             self.support = sol.support
             self.r = sol.r
-        # elif solver == 'gurobi':
-        #     if not inttol:
-        #         raise ValueError('inttol should be specified to use gurobi')
-        #     self.lower_bound_solution, self.lower_bound_z, \
-        #         self.lower_bound_value = \
-        #         l0gurobi(self.x, self.y, self.l0, self.l2, self.m, self.zlb,
-        #                  self.zub, relaxed=True)
-        #     self.support = \
-        #         list(np.where(abs(self.lower_bound_solution) > inttol)[0])
-        # elif solver == 'mosek':
-        #     self.lower_bound_solution, self.lower_bound_z, \
-        #         self.lower_bound_value, self.dual_value = \
-        #         l0mosek(self.x, self.y, self.l0, self.l2, self.m, self.zlb,
-        #                 self.zub)
-        #     self.support = \
-        #         list(np.where(abs(self.lower_bound_solution) > inttol)[0])
+        else:
+            full_zlb = np.zeros(self.x.shape[1])
+            full_zlb[self.zlb] = 1
+            full_zub = np.ones(self.x.shape[1])
+            full_zub[self.zub] = 0
+            if solver == 'gurobi':
+                primal_beta, z, self.primal_value, self.dual_value = \
+                    l0gurobi(self.x, self.y, l0, l2, m, full_zlb, full_zub)
+            elif solver == 'mosek':
+                primal_beta, z, self.primal_value, self.dual_value = \
+                    l0mosek(self.x, self.y, l0, l2, m, full_zlb, full_zub)
+            else:
+                raise ValueError(f'solver {solver} not supported')
+
+            self.support = list(np.where(abs(primal_beta) > int_tol)[0])
+            self.primal_beta = primal_beta[self.support]
+            self.z = z[self.support]
         return self.primal_value, self.dual_value
 
     def upper_solve(self, l0, l2, m):
