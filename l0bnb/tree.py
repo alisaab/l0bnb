@@ -21,10 +21,10 @@ class BNBTree:
             n x p numpy array
         y: np.array
             1 dimensional numpy array of size n
-        int_tol: float
-            The integral tolerance of a variable.
-        rel_tol: float
-            primal-dual relative tolerance
+        int_tol: float, optional
+            The integral tolerance of a variable. Default 1e-4
+        rel_tol: float, optional
+            primal-dual relative tolerance. Default 1e-4
         """
         self.x = x
         self.y = y
@@ -59,26 +59,28 @@ class BNBTree:
             The second norm coefficient
         m: float
             features bound (big M)
-        gap_tol: float
+        gap_tol: float, optional
             the relative gap between the upper and lower bound after which the
-            algorithm will be terminated
-        warm_start: np.array
+            algorithm will be terminated. Default 1e-2
+        warm_start: np.array, optional
             (p x 1) array representing a warm start
-        branching: str
-            'maxfrac' or 'strong'
-        l1solver: str
-            'l1cd', 'gurobi' or 'mosek'
-        mu: float
-            Used with strong branching
-        number_of_dfs_levels: int
-            number of levels to solve as dfs
-        verbose: int
-            print progress
-        time_limit:
+        branching: str, optional
+            'maxfrac' or 'strong'. Default 'maxfrac'
+        l1solver: str, optional
+            'l1cd', 'gurobi' or 'mosek'. Default 'l1cd'
+        mu: float, optional
+            Used with strong branching. Default 0.95
+        number_of_dfs_levels: int, optional
+            number of levels to solve as dfs. Default is 0
+        verbose: int, optional
+            print progress. Default False
+        time_limit: float, optional
+            The time (in seconds) after which the solver terminates.
+            Default is 3600
         Returns
         -------
         tuple
-            upper_sol, upper_bound, lower_bound, best_gap, sol_time
+            cost, beta, sol_time, lower_bound, gap
         """
         st = time.time()
         upper_bound, upper_beta, support = self. \
