@@ -6,11 +6,12 @@ from .node import Node
 
 
 def max_fraction_branching(solution, tol):
-    casted_sol = (solution + 0.5).astype(int)
-    sol_diff = solution - casted_sol
-    max_ind = np.argmax(abs(sol_diff))
-    if abs(sol_diff[max_ind]) > tol:
-        return max_ind
+    if solution.size != 0:
+        casted_sol = (solution + 0.5).astype(int)
+        sol_diff = solution - casted_sol
+        max_ind = np.argmax(abs(sol_diff))
+        if abs(sol_diff[max_ind]) > tol:
+            return max_ind
     return -1
 
 

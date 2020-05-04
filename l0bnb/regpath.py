@@ -109,10 +109,10 @@ def fit_path(x,
                 m,
                 warm_start=warm_start,
                 gap_tol=gap_tol)
-            uppersol = tree_sol.cost
+            uppersol = tree_sol.beta
         elif solver == 'gurobi':
             from .relaxation import l0gurobi
-            _, _, uppersol, _ = l0gurobi(
+            uppersol, _, _, _ = l0gurobi(
                 x_centered,
                 y_centered,
                 current_lambda_0,
