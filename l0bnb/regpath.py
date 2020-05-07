@@ -14,7 +14,7 @@ def fit_path(x,
              lambda_0_grid=None,
              lambda_0_grid_warm_start=None,
              gap_tol=1e-2,
-             time_limit=1000,
+             time_limit=86400,
              solver='l0bnb'):
     """
     Solves the L0L2-regularized least squares problem over a sequence of
