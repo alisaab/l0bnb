@@ -14,6 +14,7 @@ def fit_path(x,
              lambda_0_grid=None,
              lambda_0_grid_warm_start=None,
              gap_tol=1e-2,
+             time_limit=1000,
              solver='l0bnb'):
     """
     Solves the L0L2-regularized least squares problem over a sequence of
@@ -50,6 +51,7 @@ def fit_path(x,
             the user).
         gap_tol (float): The tolerance for the relative MIP gap.
             Defaults to 0.01.
+        time_limit (float): Maximum run time in seconds per solution.
 
     Returns:
         A list of solutions. Each solution is a dictionary with keys:
@@ -57,6 +59,8 @@ def fit_path(x,
             "B0": The intercept term (a scalar).
             "lambda_0": The lambda_0 that generated the current solution.
             "M": The big-M used for this solution.
+            "Time_exceeded": True if the time limit is exceeded at the current
+                solution.
     """
     print("Preprocessing Data.")
     # Center and then normalize y and each column of X.
@@ -108,7 +112,8 @@ def fit_path(x,
                 lambda_2,
                 m,
                 warm_start=warm_start,
-                gap_tol=gap_tol)
+                gap_tol=gap_tol,
+                time_limit=time_limit)
             uppersol = tree_sol.beta
         elif solver == 'gurobi':
             from .relaxation import l0gurobi
@@ -128,7 +133,8 @@ def fit_path(x,
             "B": deepcopy(beta_unscaled),
             "B0": b0,
             "lambda_0": current_lambda_0,
-            "M": m
+            "M": m,
+            "Time_exceeded": False,
         })
 
         # Compute the next lambda_0 in the grid
@@ -163,6 +169,9 @@ def fit_path(x,
 
         print("Iteration: " + str(iteration_num) + ". Number of non-zeros: ",
               np.count_nonzero(uppersol))
+        if solver == 'l0bnb' and tree_sol.sol_time >= time_limit:
+            print("Early terminated due to time limit!")
+            sols[-1]["Time_exceeded"] = True
 
     return sols
 
