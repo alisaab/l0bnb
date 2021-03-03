@@ -160,6 +160,7 @@ class BNBTree:
                 if curr_upper_bound < upper_bound:
                     upper_bound = curr_upper_bound
                     upper_beta = curr_node.upper_beta
+                    support = curr_node.support
                     if verbose:
                         print('integral:', curr_node)
             # branch?
