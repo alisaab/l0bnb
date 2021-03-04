@@ -217,7 +217,7 @@ class BNBTree:
                 upper_bound_solve(self.x, self.y, l0, l2, m, support)
             return upper_bound, upper_beta, support
 
-    # def get_lower_optimal_node(self):
+    ## def get_lower_optimal_node(self):
     #     self.leaves = sorted(self.leaves)
     #     if self.leaves[-1].lower_bound_value:
     #         return self.leaves[-1]
