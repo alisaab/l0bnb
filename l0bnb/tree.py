@@ -163,6 +163,8 @@ class BNBTree:
                     support = curr_node.support
                     if verbose:
                         print('integral:', curr_node)
+                best_gap = \
+                    (upper_bound - max_lower_bound_value) / abs(upper_bound)
             # branch?
             elif curr_dual < upper_bound:
                 left_node, right_node = branch(curr_node, self.x, l0, l2, m,
