@@ -1,6 +1,6 @@
 import warnings
 
-from numba.errors import NumbaDeprecationWarning, \
+from numba.core.errors import NumbaDeprecationWarning, \
     NumbaPendingDeprecationWarning, NumbaPerformanceWarning
 
 warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
