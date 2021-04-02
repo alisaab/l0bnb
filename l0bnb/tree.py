@@ -124,7 +124,7 @@ class BNBTree:
             # calculate primal and dual values
             curr_primal, curr_dual = self. \
                 _solve_node(curr_node, l0, l2, m, l1solver, lower_bound,
-                            dual_bound)
+                            dual_bound, upper_bound)
 
             curr_upper_bound = curr_node.upper_solve(l0, l2, m)
             if curr_upper_bound < upper_bound:
@@ -195,10 +195,12 @@ class BNBTree:
         return Solution(cost=upper_bound, beta=beta, gap=gap,
                         lower_bound=lower_bound, sol_time=sol_time)
 
-    def _solve_node(self, curr_node, l0, l2, m, l1solver, lower_, dual_):
+    def _solve_node(self, curr_node, l0, l2, m, l1solver, lower_, dual_,
+                    upper_bound):
         self.number_of_nodes += 1
         curr_primal, curr_dual = curr_node. \
-            lower_solve(l0, l2, m, l1solver, self.rel_tol, self.int_tol)
+            lower_solve(l0, l2, m, l1solver, self.rel_tol, self.int_tol,
+                        tree_upper_bound=upper_bound)
         lower_[curr_node.level] = \
             min(curr_primal, lower_.get(curr_node.level, sys.maxsize))
         dual_[curr_node.level] = \

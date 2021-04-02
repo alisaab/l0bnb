@@ -63,7 +63,7 @@ def _above_threshold_indices(zub, r, x, threshold):
 
 
 def solve(x, y, l0, l2, m, zlb, zub, xi_norm=None, warm_start=None, r=None,
-          rel_tol=1e-4):
+          rel_tol=1e-4, tree_upper_bound=None):
     st = time()
     _sol_str = 'primal_value dual_value support primal_beta sol_time z r'
     Solution = namedtuple('Solution', _sol_str)
@@ -72,8 +72,8 @@ def solve(x, y, l0, l2, m, zlb, zub, xi_norm=None, warm_start=None, r=None,
         _initialize(x, y, l0, l2, m, zlb, zub, xi_norm, warm_start, r)
     primal_cost, _ = get_primal_cost(beta, r, l0, l2, m, zlb, zub)
     _, threshold = get_ratio_threshold(l0, l2, m)
+    cd_tol = rel_tol / 2
     while True:
-        cd_tol = rel_tol/2
         beta, cost, r = cd(x, beta, primal_cost, l0, l2, m, xi_norm, zlb, zub,
                            support, r, cd_tol)
         above_threshold, rx = _above_threshold_indices(zub, r, x, threshold)
@@ -84,10 +84,17 @@ def solve(x, y, l0, l2, m, zlb, zub, xi_norm=None, warm_start=None, r=None,
             [typed_a.append(x) for x in support]
             dual_cost = get_dual_cost(y, beta, r, rx, l0, l2, m, zlb, zub,
                                       typed_a)
-            if (cd_tol < 1e-8) or ((cost - dual_cost)/abs(cost) < rel_tol):
-                break
+            if tree_upper_bound:
+                if primal_cost > tree_upper_bound > dual_cost:
+                    if (cd_tol < 1e-8) or \
+                            ((cost - dual_cost)/abs(cost) < rel_tol):
+                        break
+                    else:
+                        cd_tol /= 10
+                else:
+                    break
             else:
-                cd_tol /= 10
+                break
         support = support | set([i.item() for i in outliers])
     active_set = [i.item() for i in beta.nonzero()[0]]
     beta_active, x_active, xi_norm_active, zlb_active, zub_active = \

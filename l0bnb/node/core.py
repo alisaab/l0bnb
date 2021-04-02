@@ -70,11 +70,13 @@ class Node:
         self.upper_beta = None
         self.primal_beta = None
 
-    def lower_solve(self, l0, l2, m, solver, rel_tol, int_tol=1e-6):
+    def lower_solve(self, l0, l2, m, solver, rel_tol, int_tol=1e-6,
+                    tree_upper_bound=None):
         if solver == 'l1cd':
             sol = cd_solve(x=self.x, y=self.y, l0=l0, l2=l2, m=m, zlb=self.zlb,
                            zub=self.zub, xi_norm=self.xi_norm, rel_tol=rel_tol,
-                           warm_start=self.warm_start, r=self.r)
+                           warm_start=self.warm_start, r=self.r,
+                           tree_upper_bound=tree_upper_bound)
             self.primal_value = sol.primal_value
             self.dual_value = sol.dual_value
             self.primal_beta = sol.primal_beta
