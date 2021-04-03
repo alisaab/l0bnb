@@ -63,7 +63,7 @@ def _above_threshold_indices(zub, r, x, threshold):
 
 
 def solve(x, y, l0, l2, m, zlb, zub, xi_norm=None, warm_start=None, r=None,
-          rel_tol=1e-4, tree_upper_bound=None):
+          rel_tol=1e-4, tree_upper_bound=None, mio_gap=0):
     st = time()
     _sol_str = 'primal_value dual_value support primal_beta sol_time z r'
     Solution = namedtuple('Solution', _sol_str)
@@ -85,12 +85,13 @@ def solve(x, y, l0, l2, m, zlb, zub, xi_norm=None, warm_start=None, r=None,
             dual_cost = get_dual_cost(y, beta, r, rx, l0, l2, m, zlb, zub,
                                       typed_a)
             if tree_upper_bound:
-                if primal_cost > tree_upper_bound > dual_cost:
+                cur_gap = (tree_upper_bound - primal_cost)/tree_upper_bound
+                if cur_gap < mio_gap and tree_upper_bound > dual_cost:
                     if (cd_tol < 1e-8) or \
                             ((cost - dual_cost)/abs(cost) < rel_tol):
                         break
                     else:
-                        cd_tol /= 10
+                        cd_tol /= 100
                 else:
                     break
             else:

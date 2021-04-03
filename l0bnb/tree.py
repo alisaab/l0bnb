@@ -120,11 +120,16 @@ class BNBTree:
                 self.levels[curr_node.level] -= 1
                 # self.leaves.append(current_node)
                 continue
-
+            
+            rel_gap_tol = -1
+            if best_gap <= 20 * gap_tol:
+                rel_gap_tol = 0
+            if best_gap <= 10 * gap_tol:
+                rel_gap_tol = 1
             # calculate primal and dual values
             curr_primal, curr_dual = self. \
                 _solve_node(curr_node, l0, l2, m, l1solver, lower_bound,
-                            dual_bound, upper_bound)
+                            dual_bound, upper_bound, rel_gap_tol)
 
             curr_upper_bound = curr_node.upper_solve(l0, l2, m)
             if curr_upper_bound < upper_bound:
@@ -196,11 +201,11 @@ class BNBTree:
                         lower_bound=lower_bound, sol_time=sol_time)
 
     def _solve_node(self, curr_node, l0, l2, m, l1solver, lower_, dual_,
-                    upper_bound):
+                    upper_bound, gap):
         self.number_of_nodes += 1
         curr_primal, curr_dual = curr_node. \
             lower_solve(l0, l2, m, l1solver, self.rel_tol, self.int_tol,
-                        tree_upper_bound=upper_bound)
+                        tree_upper_bound=upper_bound, mio_gap=gap)
         lower_[curr_node.level] = \
             min(curr_primal, lower_.get(curr_node.level, sys.maxsize))
         dual_[curr_node.level] = \
