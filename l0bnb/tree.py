@@ -122,9 +122,11 @@ class BNBTree:
                 continue
             
             rel_gap_tol = -1
-            if best_gap <= 20 * gap_tol:
+            if best_gap <= 20 * gap_tol or \
+                time.time() - st > time_limit / 4:
                 rel_gap_tol = 0
-            if best_gap <= 10 * gap_tol:
+            if best_gap <= 10 * gap_tol or \
+                time.time() - st > 3 * time_limit / 4:
                 rel_gap_tol = 1
             # calculate primal and dual values
             curr_primal, curr_dual = self. \
