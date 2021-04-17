@@ -5,6 +5,7 @@ import numpy as np
 from ..relaxation import cd_solve, l0gurobi, l0mosek
 from ._utils import upper_bound_solve
 
+GS_FLAG = False
 
 class Node:
     def __init__(self, parent, zlb: list, zub: list, **kwargs):
@@ -70,19 +71,30 @@ class Node:
         self.upper_beta = None
         self.primal_beta = None
 
+        # Gradient screening params.
+        self.gs_xtr = None
+        self.gs_xb = None
+        if GS_FLAG and parent:
+            self.gs_xtr = np.copy(parent.gs_xtr)
+            self.gs_xb = np.copy(parent.gs_xb)
+
+
     def lower_solve(self, l0, l2, m, solver, rel_tol, int_tol=1e-6,
                     tree_upper_bound=None, mio_gap=None):
         if solver == 'l1cd':
-            sol = cd_solve(x=self.x, y=self.y, l0=l0, l2=l2, m=m, zlb=self.zlb,
+            sol, gs_xtr, gs_xb = cd_solve(x=self.x, y=self.y, l0=l0, l2=l2, m=m, zlb=self.zlb,
                            zub=self.zub, xi_norm=self.xi_norm, rel_tol=rel_tol,
                            warm_start=self.warm_start, r=self.r,
-                           tree_upper_bound=tree_upper_bound, mio_gap=mio_gap)
+                           tree_upper_bound=tree_upper_bound, mio_gap=mio_gap,
+                           gs_xtr=self.gs_xtr, gs_xb=self.gs_xb, return_gs=True)
             self.primal_value = sol.primal_value
             self.dual_value = sol.dual_value
             self.primal_beta = sol.primal_beta
             self.z = sol.z
             self.support = sol.support
             self.r = sol.r
+            self.gs_xtr = gs_xtr
+            self.gs_xb = gs_xb
         else:
             full_zlb = np.zeros(self.x.shape[1])
             full_zlb[self.zlb] = 1
