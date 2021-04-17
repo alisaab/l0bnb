@@ -11,6 +11,16 @@ from ._cost import get_primal_cost, get_dual_cost
 from ._utils import get_ratio_threshold, get_active_components
 
 
+def is_integral(solution, tol):
+    if solution.size != 0:
+        casted_sol = (solution + 0.5).astype(int)
+        sol_diff = solution - casted_sol
+        max_ind = np.argmax(abs(sol_diff))
+        if abs(sol_diff[max_ind]) > tol:
+            return False
+    return True
+
+
 def _find_active_set(x, y, beta, l0, l2, m, zlb, zub, xi_norm, support, r):
     _ratio, threshold = get_ratio_threshold(l0, l2, m)
     correlations = np.matmul(y, x) / xi_norm
@@ -63,18 +73,19 @@ def _above_threshold_indices(zub, r, x, threshold):
 
 
 def solve(x, y, l0, l2, m, zlb, zub, xi_norm=None, warm_start=None, r=None,
-          rel_tol=1e-4, tree_upper_bound=None, mio_gap=0):
+          rel_tol=1e-4, tree_upper_bound=None, mio_gap=0,
+          check_if_integral=True):
     st = time()
     _sol_str = 'primal_value dual_value support primal_beta sol_time z r'
     Solution = namedtuple('Solution', _sol_str)
 
     beta, r, support, zub, zlb, xi_norm = \
         _initialize(x, y, l0, l2, m, zlb, zub, xi_norm, warm_start, r)
-    primal_cost, _ = get_primal_cost(beta, r, l0, l2, m, zlb, zub)
+    cost, _ = get_primal_cost(beta, r, l0, l2, m, zlb, zub)
     _, threshold = get_ratio_threshold(l0, l2, m)
     cd_tol = rel_tol / 2
     while True:
-        beta, cost, r = cd(x, beta, primal_cost, l0, l2, m, xi_norm, zlb, zub,
+        beta, cost, r = cd(x, beta, cost, l0, l2, m, xi_norm, zlb, zub,
                            support, r, cd_tol)
         above_threshold, rx = _above_threshold_indices(zub, r, x, threshold)
         # TODO: check the condition below
@@ -85,7 +96,7 @@ def solve(x, y, l0, l2, m, zlb, zub, xi_norm=None, warm_start=None, r=None,
             dual_cost = get_dual_cost(y, beta, r, rx, l0, l2, m, zlb, zub,
                                       typed_a)
             if tree_upper_bound:
-                cur_gap = (tree_upper_bound - primal_cost)/tree_upper_bound
+                cur_gap = (tree_upper_bound - cost)/tree_upper_bound
                 if cur_gap < mio_gap and tree_upper_bound > dual_cost:
                     if (cd_tol < 1e-8) or \
                             ((cost - dual_cost)/abs(cost) < rel_tol):
@@ -103,6 +114,17 @@ def solve(x, y, l0, l2, m, zlb, zub, xi_norm=None, warm_start=None, r=None,
     primal_cost, z_active = get_primal_cost(beta_active, r, l0, l2, m,
                                             zlb_active, zub_active)
     z_active = np.minimum(np.maximum(zlb_active, z_active), zub_active)
+
+    prim_dual_gap = (cost - dual_cost)/abs(cost)
+    if check_if_integral:
+        if prim_dual_gap > rel_tol:
+            if is_integral(z_active, 1e-4):
+                ws = {i: j for i, j in zip(active_set, beta_active)}
+                return solve(x=x, y=y, l0=l0, l2=l2, m=m, zlb=zlb_active,
+                             zub=zub_active, xi_norm=xi_norm, warm_start=ws,
+                             r=r, rel_tol=rel_tol,
+                             tree_upper_bound=tree_upper_bound, mio_gap=1,
+                             check_if_integral=False)
     return Solution(primal_value=primal_cost, dual_value=dual_cost,
                     support=active_set, primal_beta=beta_active,
                     sol_time=time() - st, z=z_active, r=r)
