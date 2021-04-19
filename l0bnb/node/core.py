@@ -78,23 +78,22 @@ class Node:
             self.gs_xtr = np.copy(parent.gs_xtr)
             self.gs_xb = np.copy(parent.gs_xb)
 
-
     def lower_solve(self, l0, l2, m, solver, rel_tol, int_tol=1e-6,
                     tree_upper_bound=None, mio_gap=None):
         if solver == 'l1cd':
-            sol, gs_xtr, gs_xb = cd_solve(x=self.x, y=self.y, l0=l0, l2=l2, m=m, zlb=self.zlb,
+            sol = cd_solve(x=self.x, y=self.y, l0=l0, l2=l2, m=m, zlb=self.zlb,
                            zub=self.zub, xi_norm=self.xi_norm, rel_tol=rel_tol,
                            warm_start=self.warm_start, r=self.r,
                            tree_upper_bound=tree_upper_bound, mio_gap=mio_gap,
-                           gs_xtr=self.gs_xtr, gs_xb=self.gs_xb, return_gs=True)
+                           gs_xtr=self.gs_xtr, gs_xb=self.gs_xb)
             self.primal_value = sol.primal_value
             self.dual_value = sol.dual_value
             self.primal_beta = sol.primal_beta
             self.z = sol.z
             self.support = sol.support
             self.r = sol.r
-            self.gs_xtr = gs_xtr
-            self.gs_xb = gs_xb
+            self.gs_xtr = sol.gs_xtr
+            self.gs_xb = sol.gs_xb
         else:
             full_zlb = np.zeros(self.x.shape[1])
             full_zlb[self.zlb] = 1
