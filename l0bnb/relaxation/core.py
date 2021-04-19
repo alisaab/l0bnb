@@ -9,8 +9,7 @@ from numba import njit
 from ._coordinate_descent import cd_loop, cd
 from ._cost import get_primal_cost, get_dual_cost
 from ._utils import get_ratio_threshold, get_active_components
-
-GS_FLAG = False
+from . import GS_FLAG
 
 
 def is_integral(solution, tol):
@@ -105,7 +104,7 @@ def _above_threshold_indices_gs(zub, r, x, y, threshold, gs_xtr, gs_xb, beta):
     rx[beta_supp] = r @ x[:, beta_supp]
 
     above_threshold_restricted = \
-    np.where(zub[v_hat] * np.abs(rx_restricted) - threshold > 0)[0]
+        np.where(zub[v_hat] * np.abs(rx_restricted) - threshold > 0)[0]
     above_threshold = v_hat[above_threshold_restricted]
 
     return above_threshold, rx, gs_xtr, gs_xb
@@ -115,6 +114,7 @@ def solve(x, y, l0, l2, m, zlb, zub, gs_xtr, gs_xb, xi_norm=None,
           warm_start=None, r=None,
           rel_tol=1e-4, tree_upper_bound=None, mio_gap=0,
           check_if_integral=True):
+    zlb_main, zub_main = zlb.copy(), zub.copy()
     st = time()
     _sol_str = \
         'primal_value dual_value support primal_beta sol_time z r gs_xtr gs_xb'
@@ -170,8 +170,8 @@ def solve(x, y, l0, l2, m, zlb, zub, gs_xtr, gs_xb, xi_norm=None,
         if prim_dual_gap > rel_tol:
             if is_integral(z_active, 1e-4):
                 ws = {i: j for i, j in zip(active_set, beta_active)}
-                sol = solve(x=x, y=y, l0=l0, l2=l2, m=m, zlb=zlb_active,
-                            zub=zub_active, gs_xtr=gs_xtr, gs_xb=gs_xb,
+                sol = solve(x=x, y=y, l0=l0, l2=l2, m=m, zlb=zlb_main,
+                            zub=zub_main, gs_xtr=gs_xtr, gs_xb=gs_xb,
                             xi_norm=xi_norm, warm_start=ws, r=r,
                             rel_tol=rel_tol, tree_upper_bound=tree_upper_bound,
                             mio_gap=1, check_if_integral=False)

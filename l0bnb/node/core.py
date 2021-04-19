@@ -5,7 +5,6 @@ import numpy as np
 from ..relaxation import cd_solve, l0gurobi, l0mosek
 from ._utils import upper_bound_solve
 
-GS_FLAG = False
 
 class Node:
     def __init__(self, parent, zlb: list, zub: list, **kwargs):
@@ -24,14 +23,14 @@ class Node:
         Other Parameters
         ----------------
         x: np.array
-            The data matrix (n x p). If not specified the data will be inherited
-            from the parent node
+            The data matrix (n x p). If not specified the data will be
+            inherited from the parent node
         y: np.array
-            The data vector (n x 1). If not specified the data will be inherited
-            from the parent node
+            The data vector (n x 1). If not specified the data will be
+            inherited from the parent node
         xi_xi: np.array
-            The norm of each column in x (p x 1). If not specified the data will
-            be inherited from the parent node
+            The norm of each column in x (p x 1). If not specified the data
+            will be inherited from the parent node
         l0: float
             The zeroth norm coefficient. If not specified the data will
             be inherited from the parent node
@@ -74,9 +73,11 @@ class Node:
         # Gradient screening params.
         self.gs_xtr = None
         self.gs_xb = None
-        if GS_FLAG and parent:
-            self.gs_xtr = np.copy(parent.gs_xtr)
-            self.gs_xb = np.copy(parent.gs_xb)
+        if parent:
+            if parent.gs_xtr is not None:
+                self.gs_xtr = parent.gs_xtr.copy()
+            if parent.gs_xb is not None:
+                self.gs_xb = parent.gs_xb.copy()
 
     def lower_solve(self, l0, l2, m, solver, rel_tol, int_tol=1e-6,
                     tree_upper_bound=None, mio_gap=None):
