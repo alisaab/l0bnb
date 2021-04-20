@@ -160,7 +160,7 @@ def solve(x, y, l0, l2, m, zlb, zub, gs_xtr, gs_xb, xi_norm=None,
 
             if cur_gap < mio_gap and tree_upper_bound > dual_cost:
                 if ((cost - dual_cost) / abs(cost) < rel_tol) or \
-                        (cd_tol < 1e-8 and not check_if_integral):
+                        (cd_tol < 1e-8 and check_if_integral):
                     break
                 else:
                     cd_tol /= 100
