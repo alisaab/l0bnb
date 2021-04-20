@@ -127,7 +127,6 @@ def solve(x, y, l0, l2, m, zlb, zub, gs_xtr, gs_xb, xi_norm=None,
           warm_start=None, r=None,
           rel_tol=1e-4, tree_upper_bound=None, mio_gap=0,
           check_if_integral=True, cd_max_itr=100, kkt_max_itr=100):
-    ejer = tree_upper_bound
     zlb_main, zub_main = zlb.copy(), zub.copy()
     st = time()
     _sol_str = \
