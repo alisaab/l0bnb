@@ -49,7 +49,8 @@ def cd_loop(x, beta, index_map, l2, _ratio, threshold, m, xi_xi, zlb, zub,
     return beta, r
 
 
-def cd(x, beta, cost, l0, l2, m, xi_norm, zlb, zub, support, r, rel_tol):
+def cd(x, beta, cost, l0, l2, m, xi_norm, zlb, zub, support, r, rel_tol,
+       max_itr):
     _ratio, threshold = get_ratio_threshold(l0, l2, m)
     active_set = sorted(list(support))
     beta_active, x_active, xi_norm_active, zlb_active, zub_active = \
@@ -59,7 +60,8 @@ def cd(x, beta, cost, l0, l2, m, xi_norm, zlb, zub, support, r, rel_tol):
         numba_set.append(x)
 
     tol = 1
-    while tol > rel_tol:
+    counter = 0
+    while tol > rel_tol and counter < max_itr:
         old_cost = cost
         beta_active, r = cd_loop(x_active, beta_active, numba_set, l2, _ratio,
                                  threshold, m, xi_norm_active, zlb_active,
@@ -67,5 +69,6 @@ def cd(x, beta, cost, l0, l2, m, xi_norm, zlb, zub, support, r, rel_tol):
         cost, _ = get_primal_cost(beta_active, r, l0, l2, m, zlb_active,
                                   zub_active)
         tol = abs(1 - old_cost / cost)
+        counter += 1
     beta[active_set] = beta_active
     return beta, cost, r
