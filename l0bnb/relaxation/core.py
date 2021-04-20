@@ -152,11 +152,11 @@ def solve(x, y, l0, l2, m, zlb, zub, gs_xtr, gs_xb, xi_norm=None,
             [typed_a.append(x) for x in support]
             dual_cost = get_dual_cost(y, beta, r, rx, l0, l2, m, zlb, zub,
                                       typed_a)
-            if tree_upper_bound is not None:
-                cur_gap = (tree_upper_bound - cost) / tree_upper_bound
-            else:
+            if not check_if_integral or tree_upper_bound is None:
                 cur_gap = -2
                 tree_upper_bound = dual_cost + 1
+            else:
+                cur_gap = (tree_upper_bound - cost) / tree_upper_bound
 
             if cur_gap < mio_gap and tree_upper_bound > dual_cost:
                 if ((cost - dual_cost) / abs(cost) < rel_tol) or \
@@ -168,6 +168,9 @@ def solve(x, y, l0, l2, m, zlb, zub, gs_xtr, gs_xb, xi_norm=None,
                 break
         support = support | set([i.item() for i in outliers])
         counter += 1
+    if counter == kkt_max_itr:
+        print('Maximum KKT check iterations reached, increase kkt_max_itr '
+              'to avoid this warning')
     active_set = [i.item() for i in beta.nonzero()[0]]
     beta_active, x_active, xi_norm_active, zlb_active, zub_active = \
         get_active_components(active_set, x, beta, zlb, zub, xi_norm)

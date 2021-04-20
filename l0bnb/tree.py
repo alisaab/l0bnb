@@ -47,7 +47,8 @@ class BNBTree:
 
     def solve(self, l0, l2, m, gap_tol=1e-2, warm_start=None, mu=0.95,
               branching='maxfrac', l1solver='l1cd', number_of_dfs_levels=0,
-              verbose=False, time_limit=3600):
+              verbose=False, time_limit=3600, cd_max_itr=1000,
+              kkt_max_itr=100):
         """
         Solve the least squares problem with l0l2 regularization
 
@@ -77,6 +78,10 @@ class BNBTree:
         time_limit: float, optional
             The time (in seconds) after which the solver terminates.
             Default is 3600
+        cd_max_itr: int, optional
+            The cd max iterations. Default is 1000
+        kkt_max_itr: int, optional
+            The kkt check max iterations. Default is 100
         Returns
         -------
         tuple
@@ -123,15 +128,16 @@ class BNBTree:
             
             rel_gap_tol = -1
             if best_gap <= 20 * gap_tol or \
-                time.time() - st > time_limit / 4:
+                    time.time() - st > time_limit / 4:
                 rel_gap_tol = 0
             if best_gap <= 10 * gap_tol or \
-                time.time() - st > 3 * time_limit / 4:
+                    time.time() - st > 3 * time_limit / 4:
                 rel_gap_tol = 1
             # calculate primal and dual values
             curr_primal, curr_dual = self. \
                 _solve_node(curr_node, l0, l2, m, l1solver, lower_bound,
-                            dual_bound, upper_bound, rel_gap_tol)
+                            dual_bound, upper_bound, rel_gap_tol, cd_max_itr,
+                            kkt_max_itr)
 
             curr_upper_bound = curr_node.upper_solve(l0, l2, m)
             if curr_upper_bound < upper_bound:
@@ -203,11 +209,12 @@ class BNBTree:
                         lower_bound=lower_bound, sol_time=sol_time)
 
     def _solve_node(self, curr_node, l0, l2, m, l1solver, lower_, dual_,
-                    upper_bound, gap):
+                    upper_bound, gap, cd_max_itr, kkt_max_itr):
         self.number_of_nodes += 1
         curr_primal, curr_dual = curr_node. \
             lower_solve(l0, l2, m, l1solver, self.rel_tol, self.int_tol,
-                        tree_upper_bound=upper_bound, mio_gap=gap)
+                        tree_upper_bound=upper_bound, mio_gap=gap,
+                        cd_max_itr=cd_max_itr, kkt_max_itr=kkt_max_itr)
         lower_[curr_node.level] = \
             min(curr_primal, lower_.get(curr_node.level, sys.maxsize))
         dual_[curr_node.level] = \
@@ -226,7 +233,7 @@ class BNBTree:
                 upper_bound_solve(self.x, self.y, l0, l2, m, support)
             return upper_bound, upper_beta, support
 
-    ## def get_lower_optimal_node(self):
+    # def get_lower_optimal_node(self):
     #     self.leaves = sorted(self.leaves)
     #     if self.leaves[-1].lower_bound_value:
     #         return self.leaves[-1]
