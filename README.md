@@ -1,4 +1,4 @@
-# L0BnB: Sparse Regression at Scale [![Build Status](https://travis-ci.com/alisaab/l0bnb.svg?branch=master)](https://travis-ci.com/alisaab/l0bnb)
+# L0BnB: Sparse Regression at Scale [![Build Status](https://travis-ci.com/alisaab/l0bnb.svg?branch=master)](https://travis-ci.com/alisaab/l0bnb) [![Downloads](https://pepy.tech/badge/l0bnb)](https://pepy.tech/project/l0bnb)
 ### Hussein Hazimeh, Rahul Mazumder, and Ali Saab
 ### Massachusetts Institute of Technology
 
