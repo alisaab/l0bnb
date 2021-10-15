@@ -165,7 +165,7 @@ def primal_cost_lagrange(arg, lam_2, M, delta):
     U = np.ones_like(beta)
     L = np.fabs(beta) / M
 
-    if np.any(L > U):
+    if np.any(L > U * (1 + 1e-7)):
         return np.zeros_like(arg), HUGE
 
     if delta <= 0:  # z_star=1
@@ -350,7 +350,7 @@ def lagrange_prox(prox_arg, lips, lam_2, M, delta):
     else:
         z_star[idx3] = np.clip(root_quadratic[idx3], bdry[idx3], 1)
         
-    beta_star = np.sign(v) * np.minimum(M * z_star, np.fabs(v) / (L + lam_2 / z_star))
+    beta_star = np.sign(v) * np.minimum(M * z_star, np.fabs(v) * z_star / (z_star * L + lam_2))
 
     return z_star, beta_star
 
