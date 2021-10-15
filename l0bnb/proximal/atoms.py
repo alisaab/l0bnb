@@ -24,8 +24,8 @@ class perspective_bound_atom(atom):
 
     def __init__(self,
                  shape,
-                 M,
                  lam_2,
+                 M,
                  C,
                  offset=None, 
                  quadratic=None,
@@ -106,9 +106,7 @@ class perspective_bound_atom(atom):
         if totalq.coef == 0:
             raise ValueError('lipschitz + quadratic coef must be positive')
 
-        prox_arg = -totalq.linear_term / totalq.coef
-
-        eta = self._basic_prox(prox_arg, totalq.coef)
+        eta = self._basic_prox(-totalq.linear_term, totalq.coef)
         if offset is None:
             return eta
         else:
@@ -122,14 +120,10 @@ class perspective_bound_atom(atom):
 
         # bound_prox is written with term -v^T\beta
         # to put it "inside" a quadratic with
-        # \beta we divide by lipschitz
-
-        # therefore to pull it out we multiply
-        # bt lipschitz
 
         (self.z_star_prox_,
          prox,
-         self.delta_star_prox_) = bound_prox(prox_arg * lipschitz,
+         self.delta_star_prox_) = bound_prox(prox_arg,
                                              lipschitz,
                                              self.lam_2,
                                              self.M,
@@ -188,8 +182,8 @@ class perspective_bound_atom_conjugate(atom):
 
     def __init__(self,
                  shape,
-                 M,
                  lam_2,
+                 M,
                  C,
                  offset=None, 
                  quadratic=None,
@@ -270,9 +264,7 @@ class perspective_bound_atom_conjugate(atom):
         if totalq.coef == 0:
             raise ValueError('lipschitz + quadratic coef must be positive')
 
-        prox_arg = -totalq.linear_term / totalq.coef
-
-        eta = self._basic_prox(prox_arg, totalq.coef)
+        eta = self._basic_prox(-totalq.linear_term, totalq.coef)
         if offset is None:
             return eta
         else:
@@ -286,20 +278,16 @@ class perspective_bound_atom_conjugate(atom):
 
         # bound_prox is written with term -v^T\beta
         # to put it "inside" a quadratic with
-        # \beta we divide by lipschitz
-
-        # therefore to pull it out we multiply
-        # bt lipschitz
 
         (self.z_star_prox_,
          dual_prox,
-         self.delta_star_prox_) = bound_prox(prox_arg * lipschitz,
+         self.delta_star_prox_) = bound_prox(prox_arg / lipschitz,
                                              1 / lipschitz,
                                              self.lam_2,
                                              self.M,
                                              self.C,
                                              delta_guess=self.delta_star_prox_)                                  
-        return prox_arg - dual_prox / lipschitz
+        return (prox_arg - dual_prox) / lipschitz
 
     @doc_template_user
     def nonsmooth_objective(self, arg, check_feasibility=False):
@@ -346,8 +334,8 @@ class perspective_lagrange_atom(atom):
 
     def __init__(self,
                  shape,
-                 M,
                  lam_2,
+                 M,
                  lam_0,
                  offset=None, 
                  quadratic=None,
@@ -428,9 +416,7 @@ class perspective_lagrange_atom(atom):
         if totalq.coef == 0:
             raise ValueError('lipschitz + quadratic coef must be positive')
 
-        prox_arg = -totalq.linear_term / totalq.coef
-
-        eta = self._basic_prox(prox_arg, totalq.coef)
+        eta = self._basic_prox(-totalq.linear_term, totalq.coef)
         if offset is None:
             return eta
         else:
@@ -447,7 +433,7 @@ class perspective_lagrange_atom(atom):
         # bt lipschitz
 
         (self.z_star_prox_,
-         prox) = lagrange_prox(prox_arg * lipschitz,
+         prox) = lagrange_prox(prox_arg,
                                lipschitz,
                                self.lam_2,
                                self.M,
@@ -500,8 +486,8 @@ class perspective_lagrange_atom_conjugate(atom):
 
     def __init__(self,
                  shape,
-                 M,
                  lam_2,
+                 M,
                  lam_0,
                  offset=None, 
                  quadratic=None,
@@ -582,9 +568,7 @@ class perspective_lagrange_atom_conjugate(atom):
         if totalq.coef == 0:
             raise ValueError('lipschitz + quadratic coef must be positive')
 
-        prox_arg = -totalq.linear_term / totalq.coef
-
-        eta = self._basic_prox(prox_arg, totalq.coef)
+        eta = self._basic_prox(-totalq.linear_term, totalq.coef)
         if offset is None:
             return eta
         else:
@@ -601,12 +585,12 @@ class perspective_lagrange_atom_conjugate(atom):
         # bt lipschitz
 
         (self.z_star_prox_,
-         dual_prox) = lagrange_prox(prox_arg * lipschitz,
+         dual_prox) = lagrange_prox(prox_arg / lipschitz,
                                     1 / lipschitz,
                                     self.lam_2,
                                     self.M,
                                     self.lam_0)                                  
-        return prox_arg - dual_prox / lipschitz
+        return (prox_arg - dual_prox) / lipschitz
 
     @doc_template_user
     def nonsmooth_objective(self, arg, check_feasibility=False):

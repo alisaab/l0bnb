@@ -68,11 +68,11 @@ def dual_cost_bound(conjugate_arg, lam_2, M, C):
 
     if not lam_2 >= 0:
         raise ValueError('lam_2 must be non-negative')
-    lam_2 += 1e-10 
+    lam_2 = max(lam_2, 1e-10)
 
     idx = np.fabs(v) > M * lam_2
     vals = np.zeros_like(v)
-    vals[idx] = M * np.fabs(v[idx]) - M**2 * lam_2 / 2
+    vals[idx] = M * np.fabs(v[idx]) - lam_2 * M**2 / 2
     vals[~idx] = v[~idx]**2 / (2 * lam_2)
     vals = np.sort(vals)[::-1]
     
@@ -115,7 +115,7 @@ def dual_cost_lagrange(conjugate_arg, lam_2, M, delta):
     v = conjugate_arg
     if not lam_2 >= 0:
         raise ValueError('lam_2 must be non-negative')
-    lam_2 += 1e-10 
+    lam_2 = max(lam_2, 1e-10)
 
     idx = np.fabs(v) > M * lam_2
     vals = np.zeros_like(v)
@@ -149,8 +149,7 @@ def primal_cost_lagrange(arg, lam_2, M, delta):
     Notes
     -----
 
-    A small increment of 1e-10 is added to `lam_2` to allow it to be set to exactly 0 
-    in calling this function.
+    `lam_2` is replaced with `max(lam_2, 1e-10)`.
 
     """
     HUGE = np.inf
@@ -158,7 +157,7 @@ def primal_cost_lagrange(arg, lam_2, M, delta):
     beta = arg
     if not lam_2 >= 0:
         raise ValueError('lam_2 must be non-negative')
-    lam_2 += 1e-10 
+    lam_2 = max(lam_2, 1e-10)
 
     # bounds on z
     
@@ -170,21 +169,22 @@ def primal_cost_lagrange(arg, lam_2, M, delta):
 
     if delta <= 0:  # z_star=1
         soln = np.ones_like(arg)
-        return soln, (0.5 * lam_2 * arg**2 + delta * soln).sum()
+        return soln, (0.5 * lam_2 * arg**2 + delta).sum()
     else:
-        roots = arg**2 * lam_2 / delta
+        roots = np.sqrt(arg**2 * lam_2 / 2 * delta)
         soln = np.zeros_like(arg)
 
         idx1 = roots >= U
         soln[idx1] = U[idx1]
 
-        idx2 = (roots < U) * (roots > L)
+        idx2 = (roots < U) * (roots >= L)
         soln[idx2] = roots[idx2]
 
-        idx3 = roots <= L
+        idx3 = roots < L
         soln[idx3] = L[idx3]
 
         nz = soln > 0
+
         soln_nz = soln[soln > 0]
         return soln, (lam_2 * 0.5 * arg[nz]**2 / soln_nz + delta * soln_nz).sum()
 
@@ -256,12 +256,11 @@ def primal_cost_bound(arg, lam_2, M, C, delta_guess=1):
         return primal_cost_lagrange(arg, lam_2, M, delta)[0].sum() - C
     f = functools.partial(fsum, arg, lam_2, M, C)
 
-    if np.fabs(f(U)) < 1e-7:
-        delta_star = U
-    elif np.fabs(f(L)) < 1e-7:
-        delta_star = L
-    else:
-        delta_star = root_scalar(f, method='bisect', bracket=(L, U)).root
+    delta_star = root_scalar(f,
+                             method='bisect',
+                             bracket=(L, U),
+                             xtol=1.e-6,
+                             rtol=1.e-6).root
 
     z_star, value =  primal_cost_lagrange(arg, lam_2, M, delta_star)
     return z_star, delta_star, value
@@ -317,7 +316,7 @@ def lagrange_prox(prox_arg, lips, lam_2, M, delta):
     
     if not lam_2 >= 0:
         raise ValueError('lam_2 must be non-negative')
-    lam_2 += 1e-10 
+    lam_2 = max(lam_2, 1e-10)
 
     z_star = np.zeros_like(v)
     if not np.isinf(M):
@@ -457,12 +456,12 @@ def bound_prox(prox_arg, lips, lam_2, M, C, delta_guess=1):
         return lagrange_prox(v, lips, lam_2, M, delta)[0].sum() - C
 
     f = functools.partial(fsum, v, lips, lam_2, M, C)
-    if np.fabs(f(U)) < 1e-7:
-        delta_star = U
-    elif np.fabs(f(L)) < 1e-7:
-        delta_star = L
-    else:
-        delta_star = root_scalar(f, method='bisect', bracket=(L, U)).root
+
+    delta_star = root_scalar(f,
+                             method='bisect',
+                             bracket=(L, U),
+                             xtol=1.e-6,
+                             rtol=1.e-6).root
 
     z_star, beta_star =  lagrange_prox(v, lips, lam_2, M, delta_star)
     return z_star, beta_star, delta_star
