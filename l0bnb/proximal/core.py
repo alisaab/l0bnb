@@ -153,7 +153,7 @@ def primal_cost_lagrange(arg, lam_2, M, delta):
     in calling this function.
 
     """
-    HUGE = 1e12
+    HUGE = np.inf
 
     beta = arg
     if not lam_2 >= 0:

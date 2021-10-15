@@ -4,12 +4,12 @@ from regreg.atoms import atom, _work_out_conjugate, affine_atom
 from regreg.objdoctemplates import objective_doc_templater
 from regreg.doctemplates import doc_template_user
 
-from .proxmaps import (dual_cost_bound,
-                       dual_cost_lagrange,
-                       primal_cost_bound,
-                       primal_cost_lagrange,
-                       lagrange_prox,
-                       bound_prox)
+from .core import (dual_cost_bound,
+                   dual_cost_lagrange,
+                   primal_cost_bound,
+                   primal_cost_lagrange,
+                   lagrange_prox,
+                   bound_prox)
 
 ### regreg objects for proximal gradient solver
 
