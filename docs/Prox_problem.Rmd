@@ -1,0 +1,446 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.10.2
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+## Prox problem
+
+
+The function of $\beta$ whose prox we want is 
+$$
+\varphi(\beta) = \inf_{s,z \in \mathbb{R}^p \times \mathbb{R}^p} \sum_i \frac{\lambda_2}{2} s_i
+$$
+subject to 
+$$
+\begin{aligned}
+\sum_i z_i &= C \\
+\beta_i^2& \leq s_i z_i \\
+\beta_i &\in [-Mz_i,Mz_i] \\
+z_i &\in [0,1] \\
+s_i &\geq 0
+\end{aligned}
+$$
+
+That is, we want to be able to solve, for some $v \in \mathbb{R}^p$ and arbitrary $L>0$
+$$
+\text{minimize}_{\beta \in \mathbb{R}^p} \frac{L}{2} \|\beta\|^2_2 - v^T\beta + \varphi(\beta).
+$$
+
+
+
+
+### Eliminating $s_i$
+
+We can get rid of the $s_i$'s above in the definition of $g=\varphi$
+
+$$
+\varphi(\beta) = \inf_{z \in \mathbb{R}^p } \sum_i \frac{\lambda_2}{2} \frac{\beta_i^2}{z_i}
+$$
+subject to 
+$$
+\begin{aligned}
+\sum_i z_i &= C \\
+\beta_i &\in [-Mz_i,Mz_i] \\
+z_i &\in [0,1] \\
+\end{aligned}
+$$
+
+### Conjugate 
+
+For $v \in \mathbb{R}^p$ we also will need to compute
+$$
+ \begin{aligned}
+ \varphi^*(v) &=
+\sup_{\beta \in \mathbb{R}^p} \left[\beta^Tv - \inf_{z \in \mathbb{R}^p} \frac{\lambda_2}{2} \sum_i \frac{\beta_i^2}{z_i} \right] \\
+&= 
+\sup_{\beta, z \in \mathbb{R}^p \times \mathbb{R}^p} \left[\beta^Tv - \frac{\lambda_2}{2} \sum_i \frac{\beta_i^2}{z_i} \right]
+\end{aligned}
+$$
+subject to
+$$
+\begin{aligned}
+\sum_i z_i &= C \\
+\beta_i &\in [-Mz_i,Mz_i] \\
+z_i &\in [0,1] \\
+\end{aligned}.
+$$
+
+<!-- #region -->
+We can solve for $\beta_i$ in closed form
+$$
+\beta^*_i(z,v) = \text{sign}(v_i) \cdot \min\left(M z_i, \frac{z_i |v_i|}{\lambda_2} \right)
+$$
+
+
+
+### Special case $M=\infty$
+
+In this case
+$$
+\beta^*_i(z,v) = \frac{z_i v_i}{\lambda_2}.
+$$
+
+Plugging this in yields
+$$
+\varphi^*(v) = \sup_{z \in \mathbb{R}^p} \frac{1}{2 \lambda_2} \sum_i z_i v_i^2
+$$
+subject to
+$$
+\begin{aligned}
+\sum_i z_i &= C \\
+z_i &\in [0,1] \\
+\end{aligned}.
+$$
+
+This is solved by sorting the $v_i$'2. When $C$ is an integer, we take the top $C$ and sum them. If it's not an integer, take the top $\lfloor C \rfloor + 1$, sum the first $\lfloor C \rfloor$ and add $C-\lfloor C \rfloor$ times the $\lfloor C \rfloor + 1$-st.
+<!-- #endregion -->
+
+### General case
+
+When $|v_i| > M \cdot \lambda_2$ we have
+$$
+\beta_i^*(z,v) = \text{sign}(v_i) M z_i
+$$
+otherwise
+$$
+\beta_i^*(z,v) = \frac{z_iv_i}{\lambda_2}.
+$$
+
+Plugging this in yields a term
+$$
+\begin{aligned}
+\beta^*(z,v)^Tv &= \sum_{i: |v_i| > M \cdot \lambda_2} \beta_i^*(z,v) v_i + \sum_{i: |v_i| \leq M \cdot \lambda_2}  \beta_i^*(z,v) v_i \\
+&= M \sum_{i: |v_i| > M \cdot \lambda_2} z_i|v_i| + \sum_{i: |v_i| \leq M \cdot \lambda_2} \frac{z_i v_i^2}{\lambda_2} \\
+\end{aligned}
+$$
+
+
+There is another term we must subtract
+$$
+\begin{aligned}
+\frac{\lambda_2}{2} \sum_i \frac{\beta^*_i(z,v)^2}{z_i} &= \frac{\lambda_2}{2} \left[\sum_{i: |v_i| > M \cdot \lambda_2} \frac{\beta_i^*(z,v)^2}{z_i} + \sum_{i: |v_i| \leq M \cdot \lambda_2} \frac{\beta_i^*(z,v)^2}{z_i} \right] \\
+&= \frac{\lambda_2}{2} \left[\sum_{i: |v_i| > M \cdot \lambda_2} M^2 z_i + \sum_{i: |v_i| \leq M \cdot \lambda_2} \frac{z_i v_i^2}{\lambda_2^2} \right] \\
+\end{aligned}
+$$
+
+
+We see that
+$$
+\varphi^*(v) =\sup_z \left[ M \sum_{i: |v_i| > M \cdot \lambda_2} |v_i| z_i +   \sum_{i: |v_i| \leq M \cdot \lambda_2} \frac{z_i v_i^2}{2 \lambda_2} - \frac{\lambda_2}{2}\sum_{i: |v_i| > M \cdot \lambda_2} M^2 z_i  \right]
+$$
+subject to
+$$
+\begin{aligned}
+\sum_i z_i &= C \\
+z_i &\in [0,1] \\
+\end{aligned}.
+$$
+
+This has a similar solution to the general case, we are just sorting slightly different values.
+
+```{python}
+import numpy as np
+def dual_cost(v, lam_2, M, C):
+    idx = np.fabs(v) > M * lam_2
+    vals = np.zeros_like(v)
+    vals[idx] = M * np.fabs(v[idx]) - M**2 * lam_2 / 2
+    vals[~idx] = v[~idx]**2 / (2 * lam_2)
+    vals = np.sort(vals)[::-1]
+    
+    Cf = int(np.floor(C))
+    delta = C - Cf
+    
+    return vals[:Cf].sum() + delta * vals[Cf]
+    
+v = np.random.standard_normal(100)
+dual_cost(v, 0.01, 100, 4.0)
+```
+
+### Back to prox problem
+
+The prox problem is
+$$
+\text{minimize}_{\beta \in \mathbb{R}^p} \frac{L}{2} \|\beta\|^2_2 - v^T\beta + \frac{\lambda_2}{2} \inf_{z \in \mathbb{R}^p} \sum_i \frac{\beta_i^2}{z_i} \\
+$$
+subject to
+$$
+\begin{aligned}
+\beta_i &\in [-Mz_i,Mz_i] \\
+\sum_i z_i &= C \\
+z_i &\in [0,1] \\
+\end{aligned}.
+$$
+
+Its value is
+$$
+\inf_{\beta, z \in \mathbb{R}^p \times \mathbb{R}^p}  \frac{L}{2} \|\beta\|^2_2 - v^T\beta + \frac{\lambda_2}{2}  \sum_i \frac{\beta_i^2}{z_i}
+$$
+subject to
+$$
+\begin{aligned}
+\beta_i &\in [-Mz_i,Mz_i] \\
+\sum_i z_i &= C \\
+z_i &\in [0,1] \\
+\end{aligned}.
+$$
+
+
+We can again explicitly solve for 
+$$
+\beta^*_i(z,v) = \text{sign}(v_i) \cdot \min\left(M z_i, \frac{|v_i|}{ L + \lambda_2/z_i} \right)
+$$
+
+
+Plugging this in yields a term
+$$
+\begin{aligned}
+\beta^*(z,v)^Tv &= \sum_{i: |v_i| > (M \cdot \lambda_2 + M z_i L)} \beta_i^*(z,v) v_i + \sum_{i: |v_i| \leq (M \cdot \lambda_2 + M z_i L)}  \beta_i^*(z,v) v_i \\
+&= M \sum_{i: |v_i| > (M \cdot \lambda_2 + M z_i L)} z_i |v_i| + \sum_{i: |v_i| \leq (M \cdot \lambda_2 + M z_i L)} \frac{v_i^2}{L+\lambda_2/z_i} \\
+\end{aligned}
+$$
+
+
+The quadratic term is
+$$
+\begin{aligned}
+\frac{1}{2} \sum_i \beta^*_i(z,v)^2 \left[\frac{\lambda_2}{z_i} + L \right]  &= \frac{1}{2} \left[\sum_{i: |v_i| > (M \cdot \lambda_2+ M z_i L)}\beta_i^*(z,v)^2 \left[ L + \frac{\lambda_2}{z_i} \right] + \sum_{i: |v_i| \leq (M \cdot \lambda_2 + M z_i L)} \beta_i^*(z,v)^2 \left[L + \frac{\lambda_2}{z_i}\right] \right] \\
+&= \frac{1}{2} \left[\sum_{i: |v_i| > (M \cdot \lambda_2 + M z_i L)} M^2 z_i^2  \left[L + \frac{\lambda_2}{z_i}\right] + \sum_{i: |v_i| \leq (M \cdot \lambda_2 + M z_i L)} \frac{v_i^2}{L+\lambda_2/z_i} \right] \\
+\end{aligned}
+$$
+
+
+So we want to solve
+$$
+\text{minimize}_{z \in \mathbb{R}^p} \left[\sum_{i: |v_i| >(M \cdot \lambda_2 + M z_i L)}\left( \frac{1}{2}M^2 z_i^2 \left[ L + \frac{\lambda_2}{z_i} \right] - Mz_i |v_i| \right)- \frac{1}{2} \sum_{i: |v_i| \leq (M \cdot \lambda_2 + M z_i L)} \frac{v_i^2}{L+\lambda_2/z_i} \right]  
+$$
+subject to
+$$
+\begin{aligned}
+\sum_i z_i &= C \\
+z_i &\in [0,1] \\
+\end{aligned}.
+$$
+
+
+Introducing a Lagrange parameter $\delta$ it separates over $z_i$ to
+$$
+\text{minimize}_{z \in \mathbb{R}^p} \left[\sum_{i: |v_i| > (M \cdot \lambda_2 + M z_i L)} \left( \frac{1}{2}M^2 z_i^2 \left[ L + \frac{\lambda_2}{z_i} \right] - Mz_i |v_i| \right) - \frac{1}{2} \sum_{i: |v_i| \leq (M \cdot \lambda_2 + M z_i L)} \frac{v_i^2}{L+\lambda_2/z_i} + \delta \left(\sum_i z_i - C\right) \right]  
+$$
+subject to
+$$
+\begin{aligned}
+z_i &\in [0,1] \\
+\end{aligned}.
+$$
+
+
+When we find a $\delta^*(v)$ such that $\sum_i z_i=C$ (and bounded in [0,1]), this will yield $z^*(v)$ we then plug this back into the expression for $\beta^*_i(z^*(v),v)$. We will have then found a $\beta(v)$ that achieves the value in the proximal problem. Since the optimizer is unique we will have solved the prox problem.
+
+
+### A little closer look
+
+Let's look at the values
+$$
+\tau_i = \frac{|v_i|-\lambda_2 \cdot M}{L \cdot M}.
+$$
+
+The set 
+$$
+\{i: |v_i| > M \cdot \lambda_2 + M z_i L\} = \left\{i: \tau_i > z_i\right\}.
+$$
+
+
+#### Case 1: $\tau_i \geq 1$
+
+If $\tau_i \geq 1$ the function of (as a function of $z_i$) is simply quadratic which we minimize over $[0,1]$. This quadratic has its global minimum at
+$$
+z_i^*(v_i,\delta) = \frac{M |v_i|-M^2 \lambda_2 -\delta}{M^2L} = \tau_i - \frac{\delta}{M^2L}.
+$$
+
+Hence, when $\tau_i > 1$ we have
+$$
+z^*_i(v_i,\delta) = \begin{cases} 
+1 & \tau_i - \frac{\delta}{M^2L} > 1 \\
+\tau_i - \frac{\delta}{M^2L} & 0 < \tau_i - \frac{\delta}{M^2L} < 1 \\
+0 & \tau_i - \frac{\delta}{M^2L}<0
+\end{cases} = {\tt np.clip}\left(\tau_i - \frac{\delta}{M^2L}, 0, 1 \right)
+$$
+
+
+
+#### Case 2: $\tau_i \leq 0$
+
+If $\tau_i \leq 0$ then as a function of $z_i$ is
+$$
+\begin{aligned}
+\frac{-z_i v_i^2}{2(Lz_i + \lambda_2)} + \delta z_i& = -\frac{v_i^2}{2L} \frac{Lz_i}{Lz_i + \lambda_2} + \delta z_i \\
+&= \frac{v_i^2}{2L} \left[\frac{\lambda_2}{Lz_i + \lambda_2}-1 \right] + \delta z_i
+\end{aligned}
+$$
+which we want to minimize over $z_i \in [0,1]$.
+
+
+We note first that for $\delta \leq 0$ we have
+$$
+z^*_i(v_i, \delta) = 1
+$$
+
+
+Differentiating yields
+$$
+-\frac{v_i^2\lambda_2}{2L}(L z_i+\lambda_2)^{-2} + \delta.
+$$
+
+
+Setting equal to zero yields an equation (with a solution only when $\delta > 0$).
+$$
+(Lz_i + \lambda_2)^2 = \frac{v_i^2 \lambda_2}{2L\delta}$$
+This will have a root in $[0,1]$ if 
+$$
+\frac{1}{L} \left(\frac{|v_i| \sqrt{\lambda_2}}{\sqrt{2 L \delta}} - \lambda_2\right) \in [0,1]
+$$
+
+
+If this expression is $>1$ the optimizer will be $z^*_i(v_i,\delta)=1$. On the other hand, if this expression
+is $<0$ then the derivative of our function of $z_i$ is strictly non-negative on $[0,\infty)$ hence the minimizer will be 0. We see again that for case 2 with $\delta > 0$
+$$
+z_i^*(v_i,\delta) = {\tt np.clip} \left(\frac{1}{L} \left(\frac{|v_i| \sqrt{\lambda_2}}{\sqrt{2 L \delta}} - \lambda_2\right), 0, 1 \right)
+$$
+
+
+
+
+#### Case 3: $0 < \tau_i < 1$
+
+If $\delta \leq 0$ then the quadratic has a root of its gradient to the right of $\tau_i$ and hence the minimizer is either the root of the gradient or 1.
+
+If $\delta > 0$ the quadratic case ($z_i>\tau_i$) is strictly increasing on $(\tau_i,1)$ so there is no root of the gradient there and the minimizer must be in $[0,\tau_i]$. 
+So, if $\delta > 0$ the rational piece will either have a zero of its gradient on $[0,\tau_i]$ or the minimizer will be $\tau_i$ or 0 and
+$$
+z_i^*(v_i,\delta) =
+\begin{cases}
+{\tt np.clip} \left(\frac{1}{L} \left(\frac{|v_i| \sqrt{\lambda_2}}{\sqrt{2 L \delta}} - \lambda_2\right), 0, \tau_i \right) & \delta > 0 \\
+{\tt np.clip}\left(\tau_i - \frac{\delta}{M^2L}, \tau_i, 1 \right) & \delta \leq 0.
+\end{cases}
+$$
+
+```{python}
+def almost_prox(v, lips, lam_2, M, delta):
+    
+    L = lips
+    
+    soln = np.zeros_like(v)
+    if not np.isinf(M):
+        bdry = (np.fabs(v) - lam_2 * M) / (L*M) # \tau
+    else:
+        bdry = - lam_2 * np.ones_like(v)
+    
+    root_quadratic = bdry - delta / (M**2 * L)
+    if delta > 0:
+        root_rational = np.fabs(v) * np.sqrt(lam_2) / (np.sqrt(2 * L * delta) * L)
+    
+    ## Case 1
+    
+    idx1 = bdry >= 1
+    soln[idx1] = np.clip(root_quadratic[idx1], 0, 1)
+    
+    ## Case 2
+    
+    idx2 = bdry <= 0
+    if delta > 0:
+        soln[idx2] = np.clip(root_rational[idx2], 0, 1)
+    else:
+        soln[idx2] = 1
+        
+    ## Case 3
+    
+    idx3 = (bdry > 0) * (bdry < 1)
+    if delta > 0:
+        soln[idx3] = np.clip(root_rational[idx3], 0, bdry[idx3])
+    else:
+        soln[idx3] = np.clip(root_quadratic[idx3], bdry[idx3], 1)
+        
+    return soln
+
+v = np.random.standard_normal(100)
+[almost_prox(v, 1, 0.01, 100, d).sum() for d in np.linspace(-2,2,20)]
+    
+```
+
+```{python}
+from scipy.optimize import root_scalar
+import functools
+
+def prox(v, lips, lam_2, M, C, delta=1):
+    
+    val = almost_prox(v, lips, lam_2, M, delta).sum()
+    
+    if val > C:
+        # want to increase delta
+        L = delta
+        
+        if delta > 0:
+            U = 10 * delta
+        else:
+            U = 1
+            
+        while True:
+            val = almost_prox(v, lips, lam_2, M, U).sum()
+            if val < C:
+                break
+            U *= 10
+    else:
+        # want to decrease delta
+        U = delta
+        if delta < 0:
+            L = 10 * delta
+        else:
+            L = -1
+            
+        while True:
+            val = almost_prox(v, lips, lam_2, M, L).sum()
+            if val > C:
+                break
+            L *= 10
+    
+    def fsum(v, lips, lam_2, M, C, delta):
+        return almost_prox(v, lips, lam_2, M, delta).sum() - C
+    f = functools.partial(fsum, v, lips, lam_2, M, C)
+    delta_star = root_scalar(f, method='bisect', bracket=(L, U)).root
+
+    return almost_prox(v, lips, lam_2, M, delta_star)
+```
+
+```{python}
+# %%timeit
+proxv = prox(v, 1, 0.01, 100, 8)
+proxv.sum()
+```
+
+```{python}
+# %%timeit
+proxv = prox(v, 1, 0.01, np.inf, 8)
+proxv.sum()
+```
+
+```{python}
+prox(v, 1, 1, 10, 90)
+```
+
+```{python}
+prox(v, 1e-6, 1, 10, 10)
+```
+
+```{python}
+
+```
