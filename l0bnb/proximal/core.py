@@ -154,15 +154,14 @@ def primal_cost_lagrange(arg, lam_2, M, delta):
     """
     HUGE = np.inf
 
-    beta = arg
     if not lam_2 >= 0:
         raise ValueError('lam_2 must be non-negative')
     lam_2 = max(lam_2, 1e-10)
 
     # bounds on z
     
-    U = np.ones_like(beta)
-    L = np.fabs(beta) / M
+    U = np.ones_like(arg)
+    L = np.fabs(arg) / M
 
     if np.any(L > U * (1 + 1e-7)):
         return np.zeros_like(arg), HUGE
@@ -171,7 +170,7 @@ def primal_cost_lagrange(arg, lam_2, M, delta):
         soln = np.ones_like(arg)
         return soln, (0.5 * lam_2 * arg**2 + delta).sum()
     else:
-        roots = np.sqrt(arg**2 * lam_2 / 2 * delta)
+        roots = np.sqrt(arg**2 * lam_2 / (2 * delta))
         soln = np.zeros_like(arg)
 
         idx1 = roots >= U
@@ -184,7 +183,6 @@ def primal_cost_lagrange(arg, lam_2, M, delta):
         soln[idx3] = L[idx3]
 
         nz = soln > 0
-
         soln_nz = soln[soln > 0]
         return soln, (lam_2 * 0.5 * arg[nz]**2 / soln_nz + delta * soln_nz).sum()
 
@@ -326,7 +324,7 @@ def lagrange_prox(prox_arg, lips, lam_2, M, delta):
     
     root_quadratic = bdry - delta / (M**2 * L)
     if delta > 0:
-        root_rational = np.fabs(v) * np.sqrt(lam_2) / (np.sqrt(2 * L * delta) * L)
+        root_rational = (np.fabs(v) * np.sqrt(lam_2) / np.sqrt(2 * delta) - lam_2) / L
     
     ## Case 1
     
