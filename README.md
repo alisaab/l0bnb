@@ -63,7 +63,7 @@ If you find L0BnB useful in your research, please consider citing the following 
 @article{hazimeh2020sparse,
   title={Sparse Regression at Scale: Branch-and-Bound rooted in First-Order Optimization},
   author={Hazimeh, Hussein and Mazumder, Rahul and Saab, Ali},
-  journal={arXiv preprint arXiv:2004.06152},
-  year={2020}
+  journal={Mathematical Programming},
+  year={2021}
 }
 ```
