@@ -60,10 +60,12 @@ print(fit_path.__doc__)
 ## References
 If you find L0BnB useful in your research, please consider citing the following paper:
 ```
-@article{hazimeh2020sparse,
-  title={Sparse Regression at Scale: Branch-and-Bound rooted in First-Order Optimization},
+@article{hazimeh2021sparse,
+  title={Sparse regression at scale: Branch-and-bound rooted in first-order optimization},
   author={Hazimeh, Hussein and Mazumder, Rahul and Saab, Ali},
   journal={Mathematical Programming},
-  year={2021}
+  pages={1--42},
+  year={2021},
+  publisher={Springer}
 }
 ```
