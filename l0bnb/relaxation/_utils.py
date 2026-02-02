@@ -4,7 +4,7 @@ from numba import njit
 
 @njit(cache=True)
 def get_ratio_threshold(l0, l2, m):
-    ratio = np.sqrt(l0 / l2) if l2 != 0 else np.Inf
+    ratio = np.sqrt(l0 / l2) if l2 != 0 else np.inf
     threshold = 2 * np.sqrt(l0 * l2) if ratio <= m else l0 / m + l2 * m
     return ratio, threshold
 
