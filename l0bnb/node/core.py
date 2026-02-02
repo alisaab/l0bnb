@@ -124,7 +124,7 @@ class Node:
         return upper_bound
 
     # def strong_branch_solve(self, x, l0, l2, m, xi_xi, support):
-    #     golden_ratio = np.sqrt(l0 / l2) if l2 != 0 else np.Inf
+    #     golden_ratio = np.sqrt(l0 / l2) if l2 != 0 else np.inf
     #     threshold = 2 * np.sqrt(l0 * l2) if golden_ratio <= m \
     #         else l0 / m + l2 * m
     #     _, cost, _ = \
